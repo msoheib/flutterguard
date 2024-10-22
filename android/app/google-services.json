@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "164616734121",
+    "project_id": "securityharisguard",
+    "storage_bucket": "securityharisguard.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:164616734121:android:31ea065c01d7eb187530b8",
+        "android_client_info": {
+          "package_name": "com.securityharisguard.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJrtHrmAFbFvcF5hoPIRpndecUyGoMyzU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
