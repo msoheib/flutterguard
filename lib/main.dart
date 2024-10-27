@@ -4,6 +4,7 @@ import 'pages/job_posting_list.dart';
 import 'pages/hiring_company_list.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'widgets/recyclers/navbar.dart';
 
 void main() async {
   try {
@@ -116,6 +117,7 @@ class _HomePageState extends State<HomePage> {
         JobPostingList(),
         JobseekerProfile(),
         HiringCompanyProfile(),
+        Placeholder(), // Add a placeholder for the fourth page
       ];
 
       setState(() {
@@ -148,30 +150,13 @@ class _HomePageState extends State<HomePage> {
         index: _currentIndex,
         children: _pages,
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: CustomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.work),
-            label: 'Jobs',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.business),
-            label: 'Companies',
-          ),
-        ],
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-        backgroundColor: Theme.of(context).colorScheme.surface,
       ),
     );
   }
