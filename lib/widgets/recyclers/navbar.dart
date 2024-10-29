@@ -1,75 +1,115 @@
 import 'package:flutter/material.dart';
 
-class CustomNavBar extends StatelessWidget {
-  final int currentIndex;
-  final Function(int) onTap;
+/// Flutter code sample for [BottomNavigationBar].
 
-  const CustomNavBar({
-    Key? key,
-    required this.currentIndex,
-    required this.onTap,
-  }) : super(key: key);
+void main() => runApp(const BottomNavigationBarExampleApp());
+
+class BottomNavigationBarExampleApp extends StatelessWidget {
+  const BottomNavigationBarExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 415,
-      height: 75, // Increased height to accommodate the indicator
-      child: Column(
-        children: [
-          Container(
-            width: 375,
-            height: 70,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: Colors.white,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(0, "الأعدادت", Icons.settings),
-                _buildNavItem(1, "المفصلة", Icons.list),
-                _buildNavItem(2, "الرسائل", Icons.message),
-                _buildNavItem(3, "الرئيسة", Icons.home),
-              ],
-            ),
-          ),
-          Container(
-            width: 134,
-            height: 5,
-            margin: EdgeInsets.only(left: 60.0 + (currentIndex * 75.0)),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(100),
-              color: Color(0xff1e293b),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(int index, String label, IconData icon) {
-    bool isSelected = currentIndex == index;
-    return GestureDetector(
-      onTap: () => onTap(index),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? Color(0xff1e293b) : Colors.grey,
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: isSelected ? Color(0xff1e293b) : Colors.grey,
-            ),
-          ),
-        ],
-      ),
+    return const MaterialApp(
+      home: BottomNavigationBarExample(),
     );
   }
 }
 
+class BottomNavigationBarExample extends StatefulWidget {
+  const BottomNavigationBarExample({super.key});
+
+  @override
+  State<BottomNavigationBarExample> createState() =>
+      _BottomNavigationBarExampleState();
+}
+
+class _BottomNavigationBarExampleState
+    extends State<BottomNavigationBarExample> {
+  int _selectedIndex = 0;
+  static const TextStyle optionStyle =
+      TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
+  static const List<Widget> _widgetOptions = <Widget>[
+    Text(
+      'Settings',
+      style: optionStyle,
+    ),
+    Text(
+      'Present',
+      style: optionStyle,
+    ),
+    Text(
+      'Messages',
+      style: optionStyle,
+    ),
+    Text(
+      'Home',
+      style: optionStyle,
+    ),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('BottomNavigationBar Sample'),
+      ),
+      body: Center(
+        child: _widgetOptions.elementAt(_selectedIndex),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        items: <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Image.asset(
+              _selectedIndex == 0
+                  ? 'media/icons/settings_selected.svg'
+                  : 'media/icons/settings.svg',
+              width: 24,
+              height: 24,
+            ),
+            label: 'Settings',
+          ),
+          BottomNavigationBarItem(
+            icon: Image.asset(
+              _selectedIndex == 1
+                  ? 'media/icons/present_selected.svg'
+                  : 'media/icons/present.svg',
+              width: 24,
+              height: 24,
+            ),
+            label: 'Present',
+          ),
+          BottomNavigationBarItem(
+            icon: Image.asset(
+              _selectedIndex == 2
+                  ? 'media/icons/messages_selected.svg'
+                  : 'media/icons/messages.svg',
+              width: 24,
+              height: 24,
+            ),
+            label: 'Messages',
+          ),
+          BottomNavigationBarItem(
+            icon: Image.asset(
+              _selectedIndex == 3
+                  ? 'media/icons/home_selected.svg'
+                  : 'media/icons/home.svg',
+              width: 24,
+              height: 24,
+            ),
+            label: 'Home',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.amber[800],
+        onTap: _onItemTapped,
+      ),
+    );
+  }
+}

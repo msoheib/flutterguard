@@ -1,51 +1,78 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/auth_service.dart';
+import 'login_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
-  String _email = '';
-  String _password = '';
-
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
-
     return Scaffold(
-      appBar: AppBar(title: Text('Login')),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: <Widget>[
-            TextFormField(
-              decoration: InputDecoration(labelText: 'Email'),
-              validator: (value) => value!.isEmpty ? 'Enter an email' : null,
-              onSaved: (value) => _email = value!,
+      appBar: AppBar(
+        title: Text('Login'),
+      ),
+      body: ChangeNotifierProvider(
+        create: (_) => LoginProvider(),
+        child: LoginForm(),
+      ),
+    );
+  }
+}
+
+class LoginForm extends StatelessWidget {
+  const LoginForm({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final loginProvider = Provider.of<LoginProvider>(context);
+
+    return Padding(
+      padding: EdgeInsets.all(16.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TextField(
+            decoration: InputDecoration(
+              labelText: 'Email',
+              border: OutlineInputBorder(),
             ),
-            TextFormField(
-              decoration: InputDecoration(labelText: 'Password'),
-              obscureText: true,
-              validator: (value) => value!.length < 6 ? 'Enter a password 6+ chars long' : null,
-              onSaved: (value) => _password = value!,
+            onChanged: (value) => loginProvider.setEmail(value),
+          ),
+          SizedBox(height: 16),
+          TextField(
+            decoration: InputDecoration(
+              labelText: 'Password',
+              border: OutlineInputBorder(),
             ),
-            ElevatedButton(
-              child: Text('Sign In'),
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  _formKey.currentState!.save();
-                  await authService.signIn(_email, _password);
-                }
-              },
-            ),
-          ],
-        ),
+            obscureText: true,
+            onChanged: (value) => loginProvider.setPassword(value),
+          ),
+          SizedBox(height: 24),
+          ElevatedButton(
+            child: loginProvider.isLoading
+                ? CircularProgressIndicator(color: Colors.white)
+                : Text('Login'),
+            onPressed: loginProvider.isLoading
+                ? null
+                : () async {
+                    bool success = await loginProvider.login();
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Login successful!')),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text('Login failed. Please try again.')),
+                      );
+                    }
+                  },
+          ),
+        ],
       ),
     );
   }
