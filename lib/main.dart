@@ -9,13 +9,13 @@ import 'widgets/recyclers/navbar.dart';
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    
+
     // Initialize Firebase with timeout
     await initializeFirebase().timeout(
       const Duration(seconds: 10),
       onTimeout: () => throw 'Firebase initialization timeout',
     );
-    
+
     runApp(const SecurityGuardJobApp());
   } catch (e) {
     print('Initialization error: $e');
@@ -39,29 +39,27 @@ class SecurityGuardJobApp extends StatelessWidget {
       title: 'Security Guard Job Platform',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.blue).copyWith(
+        colorScheme:
+            ColorScheme.fromSwatch(primarySwatch: Colors.blue).copyWith(
           secondary: Colors.amber,
           surface: Colors.grey[50],
         ),
         textTheme: TextTheme(
           titleLarge: TextStyle(
-              color: Colors.grey[800], 
-              fontSize: 24, 
+              color: Colors.grey[800],
+              fontSize: 24,
               fontWeight: FontWeight.bold),
           titleMedium: TextStyle(
-              color: Colors.grey[700], 
-              fontSize: 20, 
+              color: Colors.grey[700],
+              fontSize: 20,
               fontWeight: FontWeight.w600),
-          bodyMedium: TextStyle(
-              color: Colors.grey[600], 
-              fontSize: 16),
+          bodyMedium: TextStyle(color: Colors.grey[600], fontSize: 16),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue[600],
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
@@ -72,16 +70,12 @@ class SecurityGuardJobApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.grey[900],
         textTheme: TextTheme(
           titleLarge: const TextStyle(
-              color: Colors.white, 
-              fontSize: 24, 
-              fontWeight: FontWeight.bold),
+              color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
           titleMedium: TextStyle(
-              color: Colors.grey[200], 
-              fontSize: 20, 
+              color: Colors.grey[200],
+              fontSize: 20,
               fontWeight: FontWeight.w600),
-          bodyMedium: TextStyle(
-              color: Colors.grey[300], 
-              fontSize: 16),
+          bodyMedium: TextStyle(color: Colors.grey[300], fontSize: 16),
         ),
       ),
       home: const HomePage(),
@@ -178,3 +172,26 @@ Future<void> initializeFirebase() async {
     rethrow;
   }
 }
+
+// class name extends StatelessWidget {
+//   const name({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container();
+//   }
+// }
+
+// class name extends StatefulWidget {
+//   const name({super.key});
+
+//   @override
+//   State<name> createState() => _nameState();
+// }
+
+// class _nameState extends State<name> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container();
+//   }
+// }
