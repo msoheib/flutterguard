@@ -34,11 +34,11 @@ class _BottomNavigationBarExampleState
       style: optionStyle,
     ),
     Text(
-      'Present',
+      'Apply',
       style: optionStyle,
     ),
     Text(
-      'Messages',
+      'Chat',
       style: optionStyle,
     ),
     Text(
@@ -68,8 +68,8 @@ class _BottomNavigationBarExampleState
           BottomNavigationBarItem(
             icon: Image.asset(
               _selectedIndex == 0
-                  ? 'media/icons/settings_selected.svg'
-                  : 'media/icons/settings.svg',
+                  ? 'media/icons/Setting_selected.svg'
+                  : 'media/icons/Setting.svg',
               width: 24,
               height: 24,
             ),
@@ -78,28 +78,28 @@ class _BottomNavigationBarExampleState
           BottomNavigationBarItem(
             icon: Image.asset(
               _selectedIndex == 1
-                  ? 'media/icons/present_selected.svg'
-                  : 'media/icons/present.svg',
+                  ? 'media/icons/Ahead_selected.svg'
+                  : 'media/icons/Ahead.svg',
               width: 24,
               height: 24,
             ),
-            label: 'Present',
+            label: 'Apply',
           ),
           BottomNavigationBarItem(
             icon: Image.asset(
               _selectedIndex == 2
-                  ? 'media/icons/messages_selected.svg'
-                  : 'media/icons/messages.svg',
+                  ? 'media/icons/Chat_selected.svg'
+                  : 'media/icons/Chat.svg',
               width: 24,
               height: 24,
             ),
-            label: 'Messages',
+            label: 'Chat',
           ),
           BottomNavigationBarItem(
             icon: Image.asset(
               _selectedIndex == 3
-                  ? 'media/icons/home_selected.svg'
-                  : 'media/icons/home.svg',
+                  ? 'media/icons/Home_selected.svg'
+                  : 'media/icons/Home.svg',
               width: 24,
               height: 24,
             ),

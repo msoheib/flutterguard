@@ -53,9 +53,6 @@ class LoginForm extends StatelessWidget {
           ),
           SizedBox(height: 24),
           ElevatedButton(
-            child: loginProvider.isLoading
-                ? CircularProgressIndicator(color: Colors.white)
-                : Text('Login'),
             onPressed: loginProvider.isLoading
                 ? null
                 : () async {
@@ -71,6 +68,9 @@ class LoginForm extends StatelessWidget {
                       );
                     }
                   },
+            child: loginProvider.isLoading
+                ? CircularProgressIndicator(color: Colors.white)
+                : Text('Login'),
           ),
         ],
       ),
