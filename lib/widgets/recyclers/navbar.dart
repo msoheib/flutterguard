@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-
-/// Flutter code sample for [BottomNavigationBar].
-
 void main() => runApp(const BottomNavigationBarExampleApp());
 
 class BottomNavigationBarExampleApp extends StatelessWidget {
@@ -64,60 +61,120 @@ class _BottomNavigationBarExampleState
       body: Center(
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
+      floatingActionButton: Container(
+        height: 65,
+        width: 65,
+        margin: const EdgeInsets.only(bottom: 0),
+        child: FloatingActionButton(
+          backgroundColor: const Color(0xFF4CA6A8),
+          shape: const CircleBorder(),
+          child: const Icon(
+            Icons.add,
+            size: 30,
+            color: Colors.white,
+          ),
+          onPressed: () {},
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
           ),
         ),
         child: ClipRRect(
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
           ),
           child: BottomNavigationBar(
             type: BottomNavigationBarType.fixed,
             items: <BottomNavigationBarItem>[
               BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  _selectedIndex == 0
-                      ? 'media/icons/Setting_selected.svg'
-                      : 'media/icons/Setting.svg',
-                  width: 24,
-                  height: 24,
+                icon: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: SvgPicture.asset(
+                        _selectedIndex == 0
+                            ? 'media/icons/Setting_selected.svg'
+                            : 'media/icons/Setting.svg',
+                        width: 24,
+                        height: 24,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('الإعدادات'),
+                    ),
+                  ],
                 ),
-                label: 'الإعدادات',
+                label: '',
               ),
               BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  _selectedIndex == 1
-                      ? 'media/icons/Ahead_selected.svg'
-                      : 'media/icons/Ahead.svg',
-                  width: 24,
-                  height: 24,
+                icon: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 48),
+                      child: SvgPicture.asset(
+                        _selectedIndex == 1
+                            ? 'media/icons/Ahead_selected.svg'
+                            : 'media/icons/Ahead.svg',
+                        width: 24,
+                        height: 24,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 48),
+                      child: Text('المتقدمين'),
+                    ),
+                  ],
                 ),
-                label: 'المتقدمين',
+                label: '',
               ),
               BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  _selectedIndex == 2
-                      ? 'media/icons/Chat_selected.svg'
-                      : 'media/icons/Chat.svg',
-                  width: 24,
-                  height: 24,
+                icon: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 48),
+                      child: SvgPicture.asset(
+                        _selectedIndex == 2
+                            ? 'media/icons/Chat_selected.svg'
+                            : 'media/icons/Chat.svg',
+                        width: 24,
+                        height: 24,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 48),
+                      child: Text('الرسائل'),
+                    ),
+                  ],
                 ),
-                label: 'الرسائل',
+                label: '',
               ),
               BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  _selectedIndex == 3
-                      ? 'media/icons/Home_selected.svg'
-                      : 'media/icons/Home.svg',
-                  width: 24,
-                  height: 24,
+                icon: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: SvgPicture.asset(
+                        _selectedIndex == 3
+                            ? 'media/icons/Home_selected.svg'
+                            : 'media/icons/Home.svg',
+                        width: 24,
+                        height: 24,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('الرئيسية'),
+                    ),
+                  ],
                 ),
-                label: 'الرئيسية',
+                label: '',
               ),
             ],
             currentIndex: _selectedIndex,
