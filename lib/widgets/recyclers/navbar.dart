@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
 
 /// Flutter code sample for [BottomNavigationBar].
 
@@ -30,19 +32,19 @@ class _BottomNavigationBarExampleState
       TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
   static const List<Widget> _widgetOptions = <Widget>[
     Text(
-      'Settings',
+      'الإعدادات',
       style: optionStyle,
     ),
     Text(
-      'Apply',
+      'المتقدمين',
       style: optionStyle,
     ),
     Text(
-      'Chat',
+      'الرسائل',
       style: optionStyle,
     ),
     Text(
-      'Home',
+      'الرئيسية',
       style: optionStyle,
     ),
   ];
@@ -62,53 +64,68 @@ class _BottomNavigationBarExampleState
       body: Center(
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Image.asset(
-              _selectedIndex == 0
-                  ? 'media/icons/Setting_selected.svg'
-                  : 'media/icons/Setting.svg',
-              width: 24,
-              height: 24,
-            ),
-            label: 'Settings',
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
           ),
-          BottomNavigationBarItem(
-            icon: Image.asset(
-              _selectedIndex == 1
-                  ? 'media/icons/Ahead_selected.svg'
-                  : 'media/icons/Ahead.svg',
-              width: 24,
-              height: 24,
-            ),
-            label: 'Apply',
+        ),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
           ),
-          BottomNavigationBarItem(
-            icon: Image.asset(
-              _selectedIndex == 2
-                  ? 'media/icons/Chat_selected.svg'
-                  : 'media/icons/Chat.svg',
-              width: 24,
-              height: 24,
-            ),
-            label: 'Chat',
+          child: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            items: <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                icon: SvgPicture.asset(
+                  _selectedIndex == 0
+                      ? 'media/icons/Setting_selected.svg'
+                      : 'media/icons/Setting.svg',
+                  width: 24,
+                  height: 24,
+                ),
+                label: 'الإعدادات',
+              ),
+              BottomNavigationBarItem(
+                icon: SvgPicture.asset(
+                  _selectedIndex == 1
+                      ? 'media/icons/Ahead_selected.svg'
+                      : 'media/icons/Ahead.svg',
+                  width: 24,
+                  height: 24,
+                ),
+                label: 'المتقدمين',
+              ),
+              BottomNavigationBarItem(
+                icon: SvgPicture.asset(
+                  _selectedIndex == 2
+                      ? 'media/icons/Chat_selected.svg'
+                      : 'media/icons/Chat.svg',
+                  width: 24,
+                  height: 24,
+                ),
+                label: 'الرسائل',
+              ),
+              BottomNavigationBarItem(
+                icon: SvgPicture.asset(
+                  _selectedIndex == 3
+                      ? 'media/icons/Home_selected.svg'
+                      : 'media/icons/Home.svg',
+                  width: 24,
+                  height: 24,
+                ),
+                label: 'الرئيسية',
+              ),
+            ],
+            currentIndex: _selectedIndex,
+            selectedItemColor: const Color.fromARGB(255, 0, 0, 0),
+            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+            onTap: _onItemTapped,
           ),
-          BottomNavigationBarItem(
-            icon: Image.asset(
-              _selectedIndex == 3
-                  ? 'media/icons/Home_selected.svg'
-                  : 'media/icons/Home.svg',
-              width: 24,
-              height: 24,
-            ),
-            label: 'Home',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
-        onTap: _onItemTapped,
+        ),
       ),
     );
   }
