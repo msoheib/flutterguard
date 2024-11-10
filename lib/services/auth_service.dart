@@ -1,46 +1,51 @@
+// services/auth_service.dart
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  // Sign up with email and password
-  Future<UserCredential?> signUp(String email, String password) async {
+  
+  // Send OTP
+  Future<void> sendOTP(
+    String phoneNumber,
+    Function(String verificationId, int? resendToken) onCodeSent,
+    Function(String errorMessage) onError,
+  ) async {
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
+      await _auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          // Auto-verification if possible
+          await _auth.signInWithCredential(credential);
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          onError(e.message ?? 'Verification Failed');
+        },
+        codeSent: onCodeSent,
+        codeAutoRetrievalTimeout: (String verificationId) {},
+        timeout: const Duration(seconds: 60),
       );
-      return userCredential;
-    } on FirebaseAuthException catch (e) {
-      print(e.message);
-      return null;
+    } catch (e) {
+      onError(e.toString());
     }
   }
 
-  // Sign in with email and password
-  Future<UserCredential?> signIn(String email, String password) async {
+  // Verify OTP
+  Future<bool> verifyOTP(String verificationId, String smsCode) async {
     try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: smsCode,
       );
-      return userCredential;
-    } on FirebaseAuthException catch (e) {
-      print(e.message);
-      return null;
+      
+      await _auth.signInWithCredential(credential);
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 
-  // Sign out
+  // Sign Out
   Future<void> signOut() async {
     await _auth.signOut();
   }
-
-  // Get current user
-  User? getCurrentUser() {
-    return _auth.currentUser;
-  }
-
-  // Stream of auth changes
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
 }

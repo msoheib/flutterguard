@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "164616734121",
     "project_id": "securityharisguard",
-    "storage_bucket": "securityharisguard.appspot.com"
+    "storage_bucket": "securityharisguard.firebasestorage.app"
   },
   "client": [
     {
@@ -12,7 +12,12 @@
           "package_name": "com.securityharisguard.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "164616734121-1bnkao7i4v0sq0atpvdocdtocm8d00cn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBJrtHrmAFbFvcF5hoPIRpndecUyGoMyzU"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "164616734121-1bnkao7i4v0sq0atpvdocdtocm8d00cn.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "164616734121-1qmdug9vjiujjgbgldrrtjaki3gvmf9r.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.securityGuard"
+              }
+            }
+          ]
         }
       }
     }

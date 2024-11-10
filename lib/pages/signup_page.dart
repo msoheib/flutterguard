@@ -4,14 +4,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/custom_button.dart';
 import 'otp_verification_page.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class SignupPage extends StatefulWidget {
+  const SignupPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<SignupPage> createState() => _SignupPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _SignupPageState extends State<SignupPage> {
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
@@ -21,16 +21,13 @@ class _LoginPageState extends State<LoginPage> {
       return 'Please enter your phone number';
     }
     
-    // Remove any spaces or dashes
     String cleanNumber = value.replaceAll(RegExp(r'[\s-]'), '');
     
-    // Check if number starts with 0
     if (cleanNumber.startsWith('0')) {
-      cleanNumber = cleanNumber.substring(1); // Remove leading 0
+      cleanNumber = cleanNumber.substring(1);
     }
     
-    // Check if it's a valid Saudi number
-    RegExp saudiRegex = RegExp(r'^(5\d{8})$'); // Saudi mobile numbers start with 5
+    RegExp saudiRegex = RegExp(r'^(5\d{8})$');
     if (!saudiRegex.hasMatch(cleanNumber)) {
       return 'Please enter a valid Saudi mobile number';
     }
@@ -120,10 +117,10 @@ class _LoginPageState extends State<LoginPage> {
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end, // For RTL alignment
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               const Text(
-                'مرحبًا بعودتك!',
+                'إنشاء حساب جديد',
                 textAlign: TextAlign.right,
                 style: TextStyle(
                   color: Color(0xFF1A1D1E),
@@ -135,7 +132,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 20),
               const Text(
-                'املأ التفاصيل الخاصة بك أو سجل دخولك بواسطة وسائل التواصل الاجتماعي',
+                'قم بإدخال رقم هاتفك للتسجيل',
                 textAlign: TextAlign.right,
                 style: TextStyle(
                   color: Color(0xFF6A6A6A),
@@ -168,18 +165,6 @@ class _LoginPageState extends State<LoginPage> {
                 validator: _validatePhoneNumber,
               ),
               const SizedBox(height: 24),
-              const Text(
-                'أو الاستمرار مع',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Color(0xFF6A6A6A),
-                  fontSize: 16,
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.w400,
-                  height: 0.06,
-                ),
-              ),
-              const SizedBox(height: 24),
               CustomButton(
                 onPressed: _isLoading
                     ? null
@@ -190,7 +175,7 @@ class _LoginPageState extends State<LoginPage> {
                       },
                 isLoading: _isLoading,
                 child: const Text(
-                  'تسجيل الدخول',
+                  'إنشاء حساب',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 14,
@@ -206,27 +191,27 @@ class _LoginPageState extends State<LoginPage> {
                   TextSpan(
                     children: [
                       const TextSpan(
-                        text: 'مستخدم جديد؟  ',
+                        text: 'لديك حساب بالفعل؟  ',
                         style: TextStyle(
                           color: Color(0xFF6A6A6A),
                           fontSize: 16,
                           fontFamily: 'Cairo',
                           fontWeight: FontWeight.w500,
-                          height: 0.10,
+                          height: 1.5,
                         ),
                       ),
                       TextSpan(
-                        text: 'إنشاء حساب',
+                        text: 'تسجيل الدخول',
                         style: const TextStyle(
                           color: Color(0xFF4CA6A8),
                           fontSize: 16,
                           fontFamily: 'Cairo',
                           fontWeight: FontWeight.w700,
-                          height: 0.10,
+                          height: 1.5,
                         ),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
-                            Navigator.pushReplacementNamed(context, '/signup');
+                            Navigator.pushReplacementNamed(context, '/login');
                           },
                       ),
                     ],
@@ -246,4 +231,4 @@ class _LoginPageState extends State<LoginPage> {
     _phoneController.dispose();
     super.dispose();
   }
-}
+} 
