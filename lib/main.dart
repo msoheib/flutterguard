@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'widgets/auth_wrapper.dart';
 import 'pages/login_page.dart';
-import 'widgets/recyclers/navbar.dart';
 import 'pages/splash_screen.dart';
 import 'pages/signup_page.dart';
+import 'pages/home_page.dart';
+import 'pages/profile_cv_screen.dart';
+import 'services/job_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  
+  // Create sample data
+  await JobService().createSampleJobs();
+  
   runApp(const MyApp());
 }
 
@@ -45,7 +50,8 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginPage(),
         '/signup': (context) => const SignupPage(),
-        '/home': (context) => const BottomNavigationBarExample(),
+        '/home': (context) => const HomePage(),
+        '/profile': (context) => const ProfileCvScreen(),
         '/auth': (context) => const AuthWrapper(),
       },
     );

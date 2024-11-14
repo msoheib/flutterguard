@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/custom_button.dart';
+import '../services/user_service.dart';
 
 class OTPVerificationPage extends StatefulWidget {
   final String verificationId;
@@ -65,10 +66,14 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
         smsCode: otp,
       );
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
       
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
+      if (userCredential.user != null) {
+        await UserService().createUserAfterPhoneAuth(userCredential.user!);
+        
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
       }
     } catch (e) {
       setState(() {

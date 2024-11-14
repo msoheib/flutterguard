@@ -1,0 +1,21 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="2" cy="2" r="1.25" transform="matrix(-1 0 0 1 14 2)" stroke="#4CA6A8" stroke-width="1.5"/>
+<circle cx="2" cy="2" r="1.25" transform="matrix(4.37114e-08 1 1 -4.37114e-08 2 10)" stroke="#4CA6A8" stroke-width="1.5"/>
+<circle cx="2" cy="2" r="1.25" transform="matrix(0.707107 0.707107 0.707107 -0.707107 3.51562 17.6562)" stroke="#4CA6A8" stroke-width="1.5"/>
+<circle cx="2" cy="2" r="1.25" transform="matrix(0.707107 -0.707107 -0.707107 -0.707107 17.6562 20.4844)" stroke="#4CA6A8" stroke-width="1.5"/>
+<path d="M12 5.5V7.5" stroke="#4CA6A8" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M5.5 12L7.5 12" stroke="#4CA6A8" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M7.40234 16.5977L8.81656 15.1834" stroke="#4CA6A8" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M16.5977 16.5977L15.1834 15.1834" stroke="#4CA6A8" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M12 17V18" stroke="#4CA6A8" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M17 12L18 12" stroke="#4CA6A8" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M15.5352 8.46484L16.2423 7.75774" stroke="#4CA6A8" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M8.46484 8.46484L7.75774 7.75774" stroke="#4CA6A8" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="2" cy="2" r="1.25" transform="matrix(-1 0 0 1 14 18)" stroke="#4CA6A8" stroke-width="1.5"/>
+<circle cx="2" cy="2" r="1.25" transform="matrix(4.37114e-08 1 1 -4.37114e-08 18 10)" stroke="#4CA6A8" stroke-width="1.5"/>
+<circle cx="2" cy="2" r="1.25" transform="matrix(0.707107 0.707107 0.707107 -0.707107 14.8281 6.34375)" stroke="#4CA6A8" stroke-width="1.5"/>
+<circle cx="2" cy="2" r="1.25" transform="matrix(0.707107 -0.707107 -0.707107 -0.707107 6.34375 9.17188)" stroke="#4CA6A8" stroke-width="1.5"/>
+<circle cx="5" cy="5" r="4.25" transform="matrix(-1 0 0 1 17 7)" stroke="#4CA6A8" stroke-width="1.5"/>
+<circle cx="2" cy="2" r="1.25" transform="matrix(-1 0 0 1 14 8.91797)" stroke="#4CA6A8" stroke-width="1.5"/>
+<path d="M9.41134 15.24C9.97452 14.4136 10.9232 13.8711 11.9986 13.8711C13.0741 13.8711 14.0228 14.4136 14.5859 15.24" stroke="#4CA6A8" stroke-width="1.5"/>
+</svg>

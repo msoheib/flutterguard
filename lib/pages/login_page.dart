@@ -161,9 +161,12 @@ class _LoginPageState extends State<LoginPage> {
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 textAlign: TextAlign.right,
+                autofocus: true,
+                enableInteractiveSelection: true,
                 decoration: const InputDecoration(
                   hintText: '5XXXXXXXX',
                   border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
                 validator: _validatePhoneNumber,
               ),
