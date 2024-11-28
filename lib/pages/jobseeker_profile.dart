@@ -13,7 +13,7 @@ class JobseekerProfile extends StatelessWidget {
           Center(
             child: CircleAvatar(
               radius: 50,
-              backgroundImage: AssetImage('assets/profile_placeholder.png'),
+              backgroundImage: AssetImage('assets/media/icons/profile_placeholder.png'),
             ),
           ),
           SizedBox(height: 16),

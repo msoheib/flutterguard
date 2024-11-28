@@ -12,27 +12,18 @@ class ProfileCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        image: const DecorationImage(
-          image: AssetImage('assets/media/icons/profile_background.png'),
-          fit: BoxFit.cover,
-        ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Stack(
+            alignment: Alignment.center,
             children: [
-              SvgPicture.asset(
-                'assets/media/icons/edit.svg',
-                width: 24,
-                height: 24,
-              ),
               Container(
                 width: 71,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: const Color(0xFF4CA6A8),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -44,6 +35,19 @@ class ProfileCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: SvgPicture.asset(
+              'assets/media/icons/edit.svg',
+              width: 24,
+              height: 24,
+            ),
           ),
           const SizedBox(height: 16),
         ],
