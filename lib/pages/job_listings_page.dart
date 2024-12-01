@@ -1,5 +1,6 @@
 // lib/pages/job_listings_page.dart
 import 'package:flutter/material.dart';
+import '../services/job_service.dart';
 
 class JobListingsPage extends StatelessWidget {
   const JobListingsPage({super.key});
@@ -7,8 +8,9 @@ class JobListingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Job Listings')),
-      body: Center(child: Text('Job listings will be displayed here')),
+      body: Center(
+        child: Text('Job Listings Page'),
+      ),
     );
   }
 }

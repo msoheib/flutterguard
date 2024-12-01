@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Chat rules
+    match /chats/{chatId} {
+      allow read: if request.auth != null && (
+        resource.data.jobSeekerId == request.auth.uid ||
+        resource.data.companyId == request.auth.uid
+      );
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+        resource.data.jobSeekerId == request.auth.uid ||
+        resource.data.companyId == request.auth.uid
+      );
+    }
+    
+    // Messages rules
+    match /messages/{messageId} {
+      allow read: if request.auth != null && get(/databases/$(database)/documents/chats/$(resource.data.chatId)).data.jobSeekerId == request.auth.uid ||
+                                           get(/databases/$(database)/documents/chats/$(resource.data.chatId)).data.companyId == request.auth.uid;
+      allow create: if request.auth != null;
+    }
+
+    // For testing only - remove in production
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+} 

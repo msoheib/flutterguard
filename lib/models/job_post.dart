@@ -2,56 +2,84 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class JobPost {
   final String id;
-  final String employerId;
   final String title;
-  final String description;
+  final String company;
+  final String companyLogo;
   final String location;
-  final String salary;
-  final List<String> requiredSkills;
-  final String experienceLevel;
-  final DateTime postedDate;
+  final Map<String, dynamic> salary;
+  final String type;
+  final String description;
+  final List<String> requirements;
+  final List<String> qualifications;
+  final List<String> skills;
   final String status;
+  final String hirerId;
+  final int applicationsCount;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final Map<String, dynamic> filters;
 
   JobPost({
     required this.id,
-    required this.employerId,
     required this.title,
-    required this.description,
+    required this.company,
+    this.companyLogo = '',
     required this.location,
     required this.salary,
-    required this.requiredSkills,
-    required this.experienceLevel,
-    required this.postedDate,
+    required this.type,
+    required this.description,
+    required this.requirements,
+    required this.qualifications,
+    required this.skills,
     required this.status,
+    required this.hirerId,
+    required this.applicationsCount,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.filters,
   });
-
-  factory JobPost.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map<String, dynamic>;
-    return JobPost(
-      id: doc.id,
-      employerId: data['employerId'] ?? '',
-      title: data['title'] ?? '',
-      description: data['description'] ?? '',
-      location: data['location'] ?? '',
-      salary: data['salary'] ?? '',
-      requiredSkills: List<String>.from(data['requiredSkills'] ?? []),
-      experienceLevel: data['experienceLevel'] ?? '',
-      postedDate: (data['postedDate'] as Timestamp).toDate(),
-      status: data['status'] ?? '',
-    );
-  }
 
   Map<String, dynamic> toMap() {
     return {
-      'employerId': employerId,
       'title': title,
-      'description': description,
+      'company': company,
+      'companyLogo': companyLogo,
       'location': location,
       'salary': salary,
-      'requiredSkills': requiredSkills,
-      'experienceLevel': experienceLevel,
-      'postedDate': Timestamp.fromDate(postedDate),
+      'type': type,
+      'description': description,
+      'requirements': requirements,
+      'qualifications': qualifications,
+      'skills': skills,
       'status': status,
+      'hirerId': hirerId,
+      'applicationsCount': applicationsCount,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': Timestamp.fromDate(updatedAt),
+      'filters': filters,
     };
+  }
+
+  static JobPost fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return JobPost(
+      id: doc.id,
+      title: data['title'] ?? '',
+      company: data['company'] ?? '',
+      companyLogo: data['companyLogo'] ?? '',
+      location: data['location'] ?? '',
+      salary: data['salary'] ?? {},
+      type: data['type'] ?? '',
+      description: data['description'] ?? '',
+      requirements: List<String>.from(data['requirements'] ?? []),
+      qualifications: List<String>.from(data['qualifications'] ?? []),
+      skills: List<String>.from(data['skills'] ?? []),
+      status: data['status'] ?? 'active',
+      hirerId: data['hirerId'] ?? '',
+      applicationsCount: data['applicationsCount'] ?? 0,
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      filters: data['filters'] ?? {},
+    );
   }
 }

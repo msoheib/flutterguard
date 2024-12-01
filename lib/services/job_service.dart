@@ -44,10 +44,21 @@ class JobService {
 
   // Additional methods
   Stream<List<JobPost>> getJobPosts() {
+    print('Getting job posts stream');
     return _firestore.collection('job_posts')
-        .orderBy('postedDate', descending: true)
+        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => JobPost.fromFirestore(doc)).toList());
+        .map((snapshot) {
+          print('Received snapshot with ${snapshot.docs.length} documents');
+          return snapshot.docs.map((doc) {
+            try {
+              return JobPost.fromFirestore(doc);
+            } catch (e) {
+              print('Error parsing job post ${doc.id}: $e');
+              rethrow;
+            }
+          }).toList();
+        });
   }
 
   Stream<List<JobProfile>> getJobProfiles() {
@@ -56,45 +67,15 @@ class JobService {
         .map((snapshot) => snapshot.docs.map((doc) => JobProfile.fromFirestore(doc)).toList());
   }
 
-  Future<QuerySnapshot> getJobs({
-    String? industry,
-    String? location,
-    String? jobType,
-    List<String>? skills,
-    int? minSalary,
-    int? maxSalary,
-  }) {
-    Query query = _firestore.collection('jobs')
-        .where('status', isEqualTo: 'active');
-
-    if (industry != null) {
-      query = query.where('filters.industry', isEqualTo: industry);
-    }
-
-    if (location != null) {
-      query = query.where('location', isEqualTo: location);
-    }
-
-    if (jobType != null) {
-      query = query.where('type', isEqualTo: jobType);
-    }
-
-    if (minSalary != null) {
-      query = query.where('salary.min', isGreaterThanOrEqualTo: minSalary);
-    }
-
-    if (maxSalary != null) {
-      query = query.where('salary.max', isLessThanOrEqualTo: maxSalary);
-    }
-
-    // For skills, since it's an array, we use arrayContainsAny
-    if (skills != null && skills.isNotEmpty) {
-      query = query.where('filters.skills', arrayContainsAny: skills);
-    }
-
-    return query
-        .orderBy('createdAt', descending: true)
-        .get();
+  Future<List<Map<String, String>>> getJobs() async {
+    final snapshot = await _firestore.collection('jobs').get();
+    return snapshot.docs.map((doc) => {
+      'jobTitle': doc['title'] as String,
+      'companyName': doc['company'] as String,
+      'location': doc['location'] as String,
+      'salary': doc['salary']['min'].toString(),
+      'jobType': doc['type'] as String,
+    }).toList();
   }
 
   Future<void> applyForJob(String jobId, String userId, String coverLetter) {
@@ -260,5 +241,116 @@ class JobService {
     for (var job in sampleJobs) {
       await _firestore.collection('jobs').add(job);
     }
+  }
+
+  Future<void> createSampleJobPostings() async {
+    print('Creating sample job postings');
+    final List<Map<String, dynamic>> sampleJobs = [
+      {
+        'title': 'حارس أمن مجمع سكني',
+        'company': 'شركة الأمن المتقدم',
+        'companyLogo': '',
+        'location': 'الرياض',
+        'salary': {
+          'amount': 4000,
+          'currency': 'ر.س'
+        },
+        'type': 'دوام كامل',
+        'description': 'مطلوب حارس أمن للعمل في مجمع سكني راقي',
+        'requirements': [
+          'رخصة أمن سارية',
+          'خبرة لا تقل عن سنتين',
+          'القدرة على العمل بنظام المناوبات'
+        ],
+        'qualifications': [
+          'شهادة ثانوية عامة',
+          'دورات في الأمن والسلامة',
+          'رخصة قيادة سارية'
+        ],
+        'skills': [
+          'مراقبة الكاميرات',
+          'إدارة الأزمات',
+          'مهارات التواصل',
+          'اللياقة البدنية'
+        ],
+        'status': 'active',
+        'hirerId': 'sample_hirer_1',
+        'applicationsCount': 0,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'filters': {
+          'industry': 'security',
+          'experience': 2,
+          'education': 'high_school'
+        }
+      },
+      {
+        'title': 'حارس أمن مناوبات',
+        'company': 'مجموعة الحماية الأمنية',
+        'companyLogo': '',
+        'location': 'جدة',
+        'salary': {
+          'amount': 3500,
+          'currency': 'ر.س'
+        },
+        'type': 'مناوبات',
+        'description': 'نبحث عن حراس أمن للعمل بنظام المناوبات',
+        'requirements': [
+          'رخصة أمن سارية',
+          'لياقة بدنية عالية',
+          'القدرة على العمل في المناوبات الليلية'
+        ],
+        'qualifications': [
+          'شهادة ثانوية عامة',
+          'خبرة سنة على الأقل',
+          'إجادة استخدام الحاسب الآلي'
+        ],
+        'skills': [
+          'الأمن والسلامة',
+          'مكافحة الحرائق',
+          'الإسعافات الأولية',
+          'كتابة التقارير'
+        ],
+        'status': 'active',
+        'hirerId': 'sample_hirer_2',
+        'applicationsCount': 0,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'filters': {
+          'industry': 'security',
+          'experience': 1,
+          'education': 'high_school'
+        }
+      }
+    ];
+
+    // Check if jobs already exist
+    final existingJobs = await _firestore.collection('job_posts').limit(1).get();
+    if (existingJobs.docs.isEmpty) {
+      print('No existing jobs found, creating sample jobs');
+      for (var job in sampleJobs) {
+        try {
+          await _firestore.collection('job_posts').add(job);
+          print('Created job: ${job['title']}');
+        } catch (e) {
+          print('Error creating job ${job['title']}: $e');
+          rethrow;
+        }
+      }
+    } else {
+      print('Jobs already exist, skipping sample creation');
+    }
+  }
+
+  Stream<QuerySnapshot> getJobPostings() {
+    return _firestore
+        .collection('job_postings')
+        .where('status', isEqualTo: 'active')
+        .orderBy('postedDate', descending: true)
+        .snapshots();
+  }
+
+  Future<DocumentSnapshot> getJobPosting(String id) {
+    return _firestore.collection('job_postings').doc(id).get();
   }
 }
