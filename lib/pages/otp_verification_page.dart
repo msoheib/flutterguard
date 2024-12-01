@@ -7,11 +7,13 @@ import '../services/user_service.dart';
 class OTPVerificationPage extends StatefulWidget {
   final String verificationId;
   final String phoneNumber;
+  final String? userType;
 
   const OTPVerificationPage({
     super.key,
     required this.verificationId,
     required this.phoneNumber,
+    this.userType,
   });
 
   @override
@@ -69,7 +71,9 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
       UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
       
       if (userCredential.user != null) {
-        await UserService().createUserAfterPhoneAuth(userCredential.user!);
+        if (widget.userType != null) {
+          await UserService().createNewUser(userCredential.user!, widget.userType!);
+        }
         
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/home');
@@ -91,19 +95,38 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Verify OTP'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF4CA6A8)),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
+            const Text(
+              'التحقق من رقم الهاتف',
+              style: TextStyle(
+                color: Color(0xFF1A1D1E),
+                fontSize: 30,
+                fontFamily: 'Cairo',
+                fontWeight: FontWeight.w700,
+                height: 1.2,
+              ),
+            ),
+            const SizedBox(height: 20),
             Text(
-              'Enter verification code sent to\n${widget.phoneNumber}',
-              textAlign: TextAlign.center,
+              'تم إرسال رمز التحقق إلى ${widget.phoneNumber}',
+              textAlign: TextAlign.right,
               style: const TextStyle(
+                color: Color(0xFF6A6A6A),
                 fontSize: 16,
-                color: Colors.grey,
+                fontFamily: 'Cairo',
+                fontWeight: FontWeight.w400,
+                height: 1.5,
               ),
             ),
             const SizedBox(height: 32),
@@ -113,44 +136,36 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                 6,
                 (index) => SizedBox(
                   width: 45,
-                  height: 55,
                   child: TextField(
                     controller: _controllers[index],
                     focusNode: _focusNodes[index],
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
                     maxLength: 1,
-                    style: const TextStyle(fontSize: 24),
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       counterText: '',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF4CA6A8),
-                          width: 2,
-                        ),
-                      ),
+                      border: OutlineInputBorder(),
                     ),
+                    onChanged: (value) => _onOTPDigitChanged(index, value),
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
                     ],
-                    onChanged: (value) => _onOTPDigitChanged(index, value),
                   ),
                 ),
-              ),
+              ).reversed.toList(),
             ),
             const SizedBox(height: 32),
             CustomButton(
               onPressed: _isLoading ? null : _verifyOTP,
               isLoading: _isLoading,
               child: const Text(
-                'Verify',
+                'تأكيد',
                 style: TextStyle(
-                  fontSize: 16,
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontFamily: 'Cairo',
                   fontWeight: FontWeight.w500,
+                  height: 0.12,
                 ),
               ),
             ),

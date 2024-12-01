@@ -19,7 +19,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     'اللياقة البدنية'
   ];
 
-  // Filter state variables
   String selectedCategory = '';
   DateTimeRange? selectedDateRange;
   RangeValues salaryRange = const RangeValues(2000, 4000);
@@ -101,9 +100,19 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   }
 
   void _applyFilters() {
+    print('Creating filters with:');
+    print('  Category: $selectedCategory');
+    print('  Region: $selectedRegion');
+    print('  Salary Range: $salaryRange');
+    print('  Date Range: $selectedDateRange');
+    print('  Skills: $selectedSkills');
+
     final filters = {
       'category': selectedCategory,
-      'dateRange': selectedDateRange,
+      'dateRange': selectedDateRange != null ? {
+        'start': selectedDateRange!.start,
+        'end': selectedDateRange!.end,
+      } : null,
       'salaryRange': {
         'min': salaryRange.start,
         'max': salaryRange.end,
@@ -111,7 +120,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       'region': selectedRegion,
       'skills': selectedSkills,
     };
-    print('Applied Filters: $filters');
+    print('Final filters object: $filters');
     Navigator.pop(context, filters);
   }
 

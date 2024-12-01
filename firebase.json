@@ -1,1 +1,6 @@
-{"flutter":{"platforms":{"dart":{"lib/firebase_options.dart":{"projectId":"securityharisguard","configurations":{"windows":"1:164616734121:web:3befe41105ef94ab7530b8"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import '../models/job_profile.dart';
 import '../models/job_post.dart';
 
@@ -43,22 +44,87 @@ class JobService {
   }
 
   // Additional methods
-  Stream<List<JobPost>> getJobPosts() {
-    print('Getting job posts stream');
-    return _firestore.collection('job_posts')
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) {
-          print('Received snapshot with ${snapshot.docs.length} documents');
-          return snapshot.docs.map((doc) {
-            try {
-              return JobPost.fromFirestore(doc);
-            } catch (e) {
-              print('Error parsing job post ${doc.id}: $e');
-              rethrow;
-            }
-          }).toList();
-        });
+  Stream<List<JobPost>> getJobPosts({Map<String, dynamic>? filters}) {
+    Query query = _firestore.collection('jobs');
+
+    if (filters != null) {
+      print('Applying filters: $filters'); // Debug print
+
+      // Apply category filter
+      if (filters['category'] != null && filters['category'].isNotEmpty) {
+        print('Filtering by category: ${filters['category']}');
+        query = query.where('type', isEqualTo: filters['category']);
+      }
+
+      // Apply region filter
+      if (filters['region'] != null && filters['region'].isNotEmpty) {
+        print('Filtering by region: ${filters['region']}');
+        query = query.where('location', isEqualTo: filters['region']);
+      }
+
+      // Apply salary range filter
+      if (filters['salaryRange'] != null) {
+        final minSalary = (filters['salaryRange']['min'] as double).toInt();
+        final maxSalary = (filters['salaryRange']['max'] as double).toInt();
+        print('Filtering by salary range: $minSalary - $maxSalary');
+        query = query.where('salary.amount', isGreaterThanOrEqualTo: minSalary)
+                    .where('salary.amount', isLessThanOrEqualTo: maxSalary);
+      }
+
+      // Apply date range filter
+      if (filters['dateRange'] != null && filters['dateRange'] is Map) {
+        final startDate = (filters['dateRange']['start'] as DateTime);
+        final endDate = (filters['dateRange']['end'] as DateTime);
+        print('Filtering by date range: $startDate - $endDate');
+        query = query.where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+                    .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(endDate));
+      }
+    }
+
+    // First, let's check all jobs without filters
+    print('Checking all jobs in collection:');
+    _firestore.collection('jobs').get().then((snapshot) {
+      print('Total jobs in collection: ${snapshot.docs.length}');
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        print('Document ${doc.id}:');
+        print('  type: ${data['type']}');
+        print('  location: ${data['location']}');
+        print('  salary: ${data['salary']}');
+        print('  skills: ${data['skills']}');
+      }
+    });
+
+    return query.snapshots().map((snapshot) {
+      print('Raw Firestore query results: ${snapshot.docs.length} documents');
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        print('Document ${doc.id}:');
+        print('  type: ${data['type']}');
+        print('  location: ${data['location']}');
+        print('  salary: ${data['salary']}');
+        print('  skills: ${data['skills']}');
+      }
+
+      var jobs = snapshot.docs.map((doc) => JobPost.fromFirestore(doc)).toList();
+      print('Retrieved ${jobs.length} jobs before skills filtering');
+
+      // Apply skills filter if specified
+      if (filters != null && filters['skills'] != null && filters['skills'].isNotEmpty) {
+        print('Filtering by skills: ${filters['skills']}');
+        jobs = jobs.where((job) {
+          print('Checking job ${job.title}:');
+          print('  Job skills: ${job.skills}');
+          print('  Filter skills: ${filters['skills']}');
+          final hasMatchingSkills = job.skills.any((skill) => filters['skills'].contains(skill));
+          print('  Has matching skills: $hasMatchingSkills');
+          return hasMatchingSkills;
+        }).toList();
+        print('${jobs.length} jobs after skills filtering');
+      }
+
+      return jobs;
+    });
   }
 
   Stream<List<JobProfile>> getJobProfiles() {
@@ -244,101 +310,58 @@ class JobService {
   }
 
   Future<void> createSampleJobPostings() async {
-    print('Creating sample job postings');
-    final List<Map<String, dynamic>> sampleJobs = [
-      {
-        'title': 'حارس أمن مجمع سكني',
-        'company': 'شركة الأمن المتقدم',
-        'companyLogo': '',
-        'location': 'الرياض',
-        'salary': {
-          'amount': 4000,
-          'currency': 'ر.س'
-        },
-        'type': 'دوام كامل',
-        'description': 'مطلوب حارس أمن للعمل في مجمع سكني راقي',
-        'requirements': [
-          'رخصة أمن سارية',
-          'خبرة لا تقل عن سنتين',
-          'القدرة على العمل بنظام المناوبات'
-        ],
-        'qualifications': [
-          'شهادة ثانوية عامة',
-          'دورات في الأمن والسلامة',
-          'رخصة قيادة سارية'
-        ],
-        'skills': [
-          'مراقبة الكاميرات',
-          'إدارة الأزمات',
-          'مهارات التواصل',
-          'اللياقة البدنية'
-        ],
-        'status': 'active',
-        'hirerId': 'sample_hirer_1',
-        'applicationsCount': 0,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'filters': {
-          'industry': 'security',
-          'experience': 2,
-          'education': 'high_school'
-        }
-      },
-      {
-        'title': 'حارس أمن مناوبات',
-        'company': 'مجموعة الحماية الأمنية',
-        'companyLogo': '',
-        'location': 'جدة',
-        'salary': {
-          'amount': 3500,
-          'currency': 'ر.س'
-        },
-        'type': 'مناوبات',
-        'description': 'نبحث عن حراس أمن للعمل بنظام المناوبات',
-        'requirements': [
-          'رخصة أمن سارية',
-          'لياقة بدنية عالية',
-          'القدرة على العمل في المناوبات الليلية'
-        ],
-        'qualifications': [
-          'شهادة ثانوية عامة',
-          'خبرة سنة على الأقل',
-          'إجادة استخدام الحاسب الآلي'
-        ],
-        'skills': [
-          'الأمن والسلامة',
-          'مكافحة الحرائق',
-          'الإسعافات الأولية',
-          'كتابة التقارير'
-        ],
-        'status': 'active',
-        'hirerId': 'sample_hirer_2',
-        'applicationsCount': 0,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'filters': {
-          'industry': 'security',
-          'experience': 1,
-          'education': 'high_school'
-        }
-      }
-    ];
+    print('Checking for existing jobs...');
+    final QuerySnapshot snapshot = await _firestore.collection('jobs').get();
+    print('Found ${snapshot.docs.length} existing jobs');
 
-    // Check if jobs already exist
-    final existingJobs = await _firestore.collection('job_posts').limit(1).get();
-    if (existingJobs.docs.isEmpty) {
-      print('No existing jobs found, creating sample jobs');
-      for (var job in sampleJobs) {
-        try {
-          await _firestore.collection('job_posts').add(job);
-          print('Created job: ${job['title']}');
-        } catch (e) {
-          print('Error creating job ${job['title']}: $e');
-          rethrow;
-        }
+    if (snapshot.docs.isEmpty) {
+      final List<Map<String, dynamic>> sampleJobs = [
+        {
+          'title': 'حارس أمن',
+          'company': 'شركة الأمن المتقدم',
+          'location': 'الرياض',
+          'type': 'حارس أمن',
+          'salary': {'amount': 3000, 'currency': 'ريال'},
+          'description': 'نبحث عن حارس أمن ذو خبرة',
+          'requirements': ['رخصة قيادة', 'شهادة أمن'],
+          'qualifications': ['دبلوم', 'خبرة 2 سنة'],
+          'skills': ['حارس أمن', 'مراقبة الكاميرات', 'اللياقة البدنية'],
+          'status': 'active',
+          'hirerId': 'sample',
+          'applicationsCount': 0,
+          'createdAt': Timestamp.now(),
+          'updatedAt': Timestamp.now(),
+          'filters': {},
+        },
+        {
+          'title': 'مشرف أمن',
+          'company': 'شركة الحماية الشاملة',
+          'location': 'جدة',
+          'type': 'مشرف أمن',
+          'salary': {'amount': 4000, 'currency': 'ريال'},
+          'description': 'مطلوب مشرف أمن للعمل في مجمع تجاري',
+          'requirements': ['رخصة قيادة', 'شهادة أمن متقدمة'],
+          'qualifications': ['بكالوريوس', 'خبرة 4 سنوات'],
+          'skills': ['إدارة الأزمات', 'مهارات التواصل', 'تقييم الثغرات'],
+          'status': 'active',
+          'hirerId': 'sample',
+          'applicationsCount': 0,
+          'createdAt': Timestamp.now(),
+          'updatedAt': Timestamp.now(),
+          'filters': {},
+        },
+      ];
+
+      print('Creating sample jobs:');
+      for (var jobData in sampleJobs) {
+        print('Creating job:');
+        print('  type: ${jobData['type']}');
+        print('  location: ${jobData['location']}');
+        print('  salary: ${jobData['salary']}');
+        print('  skills: ${jobData['skills']}');
+        await _firestore.collection('jobs').add(jobData);
       }
-    } else {
-      print('Jobs already exist, skipping sample creation');
+      print('Sample jobs created successfully');
     }
   }
 

@@ -15,6 +15,7 @@ class _SignupPageState extends State<SignupPage> {
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  String _selectedUserType = 'jobseeker'; // Default to jobseeker
 
   String? _validatePhoneNumber(String? value) {
     if (value == null || value.isEmpty) {
@@ -78,6 +79,7 @@ class _SignupPageState extends State<SignupPage> {
               builder: (context) => OTPVerificationPage(
                 verificationId: verificationId,
                 phoneNumber: phoneNumber,
+                userType: _selectedUserType,
               ),
             ),
           );
@@ -131,6 +133,63 @@ class _SignupPageState extends State<SignupPage> {
                 ),
               ),
               const SizedBox(height: 20),
+              const Text(
+                'اختر نوع الحساب',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  color: Color(0xFF6A6A6A),
+                  fontSize: 16,
+                  fontFamily: 'Cairo',
+                  fontWeight: FontWeight.w400,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Radio<String>(
+                    value: 'company',
+                    groupValue: _selectedUserType,
+                    onChanged: (String? value) {
+                      setState(() {
+                        _selectedUserType = value!;
+                      });
+                    },
+                    activeColor: const Color(0xFF4CA6A8),
+                  ),
+                  const Text(
+                    'شركة',
+                    style: TextStyle(
+                      color: Color(0xFF6A6A6A),
+                      fontSize: 14,
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  Radio<String>(
+                    value: 'jobseeker',
+                    groupValue: _selectedUserType,
+                    onChanged: (String? value) {
+                      setState(() {
+                        _selectedUserType = value!;
+                      });
+                    },
+                    activeColor: const Color(0xFF4CA6A8),
+                  ),
+                  const Text(
+                    'باحث عن عمل',
+                    style: TextStyle(
+                      color: Color(0xFF6A6A6A),
+                      fontSize: 14,
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
               const Text(
                 'قم بإدخال رقم هاتفك للتسجيل',
                 textAlign: TextAlign.right,

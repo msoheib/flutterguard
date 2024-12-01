@@ -21,16 +21,13 @@ class _LoginPageState extends State<LoginPage> {
       return 'Please enter your phone number';
     }
     
-    // Remove any spaces or dashes
     String cleanNumber = value.replaceAll(RegExp(r'[\s-]'), '');
     
-    // Check if number starts with 0
     if (cleanNumber.startsWith('0')) {
-      cleanNumber = cleanNumber.substring(1); // Remove leading 0
+      cleanNumber = cleanNumber.substring(1);
     }
     
-    // Check if it's a valid Saudi number
-    RegExp saudiRegex = RegExp(r'^(5\d{8})$'); // Saudi mobile numbers start with 5
+    RegExp saudiRegex = RegExp(r'^(5\d{8})$');
     if (!saudiRegex.hasMatch(cleanNumber)) {
       return 'Please enter a valid Saudi mobile number';
     }
@@ -120,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end, // For RTL alignment
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               const Text(
                 'مرحبًا بعودتك!',

@@ -4,15 +4,18 @@ import '../services/job_service.dart';
 import '../models/job_post.dart';
 
 class JobListings extends StatefulWidget {
+  const JobListings({Key? key}) : super(key: key);
+
   @override
-  State<JobListings> createState() => _JobListingsState();
+  State<JobListings> createState() => JobListingsState();
 }
 
-class _JobListingsState extends State<JobListings> {
+class JobListingsState extends State<JobListings> {
   final JobService _jobService = JobService();
   List<JobPost> _jobs = [];
   bool _isLoading = true;
   String? _error;
+  Map<String, dynamic>? _activeFilters;
 
   @override
   void initState() {
@@ -22,14 +25,12 @@ class _JobListingsState extends State<JobListings> {
 
   Future<void> _loadJobs() async {
     try {
-      // First, create some sample jobs if none exist
       await _jobService.createSampleJobPostings();
       print('Created sample job postings');
 
-      // Listen to job posts stream
-      _jobService.getJobPosts().listen(
+      _jobService.getJobPosts(filters: _activeFilters).listen(
         (jobs) {
-          print('Received ${jobs.length} jobs');
+          print('Received ${jobs.length} jobs with filters: $_activeFilters');
           setState(() {
             _jobs = jobs;
             _isLoading = false;
@@ -51,6 +52,15 @@ class _JobListingsState extends State<JobListings> {
         _isLoading = false;
       });
     }
+  }
+
+  void updateFilters(Map<String, dynamic> filters) {
+    print('Updating filters in JobListings: $filters');
+    setState(() {
+      _activeFilters = filters;
+      _isLoading = true;
+    });
+    _loadJobs();
   }
 
   @override
@@ -80,10 +90,16 @@ class _JobListingsState extends State<JobListings> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text('No jobs found'),
-            ElevatedButton(
-              onPressed: _loadJobs,
-              child: const Text('Refresh'),
-            ),
+            if (_activeFilters != null)
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _activeFilters = null;
+                    _loadJobs();
+                  });
+                },
+                child: const Text('Clear Filters'),
+              ),
           ],
         ),
       );

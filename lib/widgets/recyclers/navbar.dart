@@ -5,17 +5,23 @@ import '../../pages/home_page.dart';
 import '../../pages/chat_page.dart';
 
 class Navbar extends StatefulWidget {
-  const Navbar({super.key});
+  final int currentIndex;
+  final Function(int) onTap;
+
+  const Navbar({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+  });
 
   @override
   State<Navbar> createState() => _NavbarState();
 }
 
 class _NavbarState extends State<Navbar> with SingleTickerProviderStateMixin {
-  int _selectedIndex = 0;
-  int? _pressedIndex;
   late AnimationController _controller;
   late Animation<double> _animation;
+  int? _pressedIndex;
 
   @override
   void initState() {
@@ -31,16 +37,6 @@ class _NavbarState extends State<Navbar> with SingleTickerProviderStateMixin {
         curve: Curves.easeInOut,
       ),
     );
-
-    // Set initial index based on current route
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final route = ModalRoute.of(context)?.settings.name;
-      if (route == '/chat') {
-        setState(() => _selectedIndex = 2);
-      } else if (route == '/home') {
-        setState(() => _selectedIndex = 3);
-      }
-    });
   }
 
   @override
@@ -50,7 +46,7 @@ class _NavbarState extends State<Navbar> with SingleTickerProviderStateMixin {
   }
 
   void _onItemTapped(int index) async {
-    if (_selectedIndex == index) return;
+    if (widget.currentIndex == index) return;
 
     setState(() => _pressedIndex = index);
     
@@ -62,38 +58,7 @@ class _NavbarState extends State<Navbar> with SingleTickerProviderStateMixin {
     });
     HapticFeedback.lightImpact();
 
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    switch (index) {
-      case 2: // الرسائل
-        if (ModalRoute.of(context)?.settings.name != '/chat') {
-          Navigator.of(context).pushAndRemoveUntil(
-            PageRouteBuilder(
-              pageBuilder: (context, animation1, animation2) => const ChatPage(),
-              transitionDuration: Duration.zero,
-              reverseTransitionDuration: Duration.zero,
-              settings: const RouteSettings(name: '/chat'),
-            ),
-            (route) => false,
-          );
-        }
-        break;
-      case 3: // الرئيسية
-        if (ModalRoute.of(context)?.settings.name != '/home') {
-          Navigator.of(context).pushAndRemoveUntil(
-            PageRouteBuilder(
-              pageBuilder: (context, animation1, animation2) => const HomePage(),
-              transitionDuration: Duration.zero,
-              reverseTransitionDuration: Duration.zero,
-              settings: const RouteSettings(name: '/home'),
-            ),
-            (route) => false,
-          );
-        }
-        break;
-    }
+    widget.onTap(index);
   }
 
   @override
@@ -134,7 +99,7 @@ class _NavbarState extends State<Navbar> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildNavItem(int index, String label, String icon, String selectedIcon) {
-    final bool isSelected = _selectedIndex == index;
+    final bool isSelected = widget.currentIndex == index;
     final bool isPressed = _pressedIndex == index;
 
     Widget content = Column(
