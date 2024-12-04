@@ -106,6 +106,7 @@ class UserService {
         userData['postedJobs'] = [];
         userData['activeJobCount'] = 0;
         userData['totalJobsPosted'] = 0;
+        userData['isProfileComplete'] = false;
       }
 
       // Create the user document

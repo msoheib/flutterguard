@@ -3,15 +3,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../pages/home_page.dart';
 import '../../pages/chat_page.dart';
+import '../../screens/create_job_page.dart';
 
 class CompanyNavbar extends StatefulWidget {
   final int currentIndex;
   final Function(int) onTap;
+  final VoidCallback? onProfileTap;
 
   const CompanyNavbar({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.onProfileTap,
   });
 
   @override
@@ -63,6 +66,19 @@ class _CompanyNavbarState extends State<CompanyNavbar> with SingleTickerProvider
     // Handle navigation after animation completes
     if (mounted) {
       switch (index) {
+        case 0: // Settings/Profile
+          if (widget.onProfileTap != null) {
+            widget.onProfileTap!();
+          }
+          break;
+        case 2: // Create Job
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CreateJobPage(),
+            ),
+          );
+          break;
         case 3: // الرسائل
           if (ModalRoute.of(context)?.settings.name != '/chat') {
             Navigator.pushAndRemoveUntil(

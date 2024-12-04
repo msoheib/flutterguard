@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/custom_button.dart';
 import 'otp_verification_page.dart';
+import '../screens/company_profile_setup_page.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -94,6 +95,19 @@ class _SignupPageState extends State<SignupPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
+    }
+  }
+
+  void _onSignupSuccess() {
+    if (_selectedUserType == 'company') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const CompanyProfileSetupPage(),
+        ),
+      );
+    } else {
+      Navigator.pushReplacementNamed(context, '/home');
     }
   }
 

@@ -60,6 +60,10 @@ class JobPost {
     };
   }
 
+  Map<String, dynamic> toFirestore() {
+    return toMap();
+  }
+
   static JobPost fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return JobPost(

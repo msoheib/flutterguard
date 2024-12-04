@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'recyclers/navbar.dart';
 import 'recyclers/company_navbar.dart';
+import '../screens/company_profile_setup_page.dart';
+import '../pages/profile_cv_screen.dart';
 
 class AuthenticatedLayout extends StatefulWidget {
   final Widget child;
@@ -43,42 +45,70 @@ class _AuthenticatedLayoutState extends State<AuthenticatedLayout> {
             .doc(userId)
             .get();
         
-        print('User doc exists: ${userDoc.exists}');
         if (userDoc.exists) {
-          print('User data: ${userDoc.data()}');
+          final data = userDoc.data();
+          if (data != null && data['role'] != null) {
+            setState(() {
+              userRole = data['role'];
+            });
+          } else {
+            print('User role not found in document');
+          }
+        } else {
+          print('User document does not exist');
         }
-      }
-
-      // Always set role and loading state regardless of user doc
-      if (mounted) {
-        setState(() {
-          userRole = 'company';
-          _isLoading = false;
-        });
       }
     } catch (e) {
       print('Error getting user role: $e');
+    } finally {
       if (mounted) {
         setState(() {
-          userRole = 'company';
           _isLoading = false;
         });
       }
     }
-    print('User role set to: $userRole, isLoading: $_isLoading');
+  }
+
+  void _handleProfileTap(BuildContext context) {
+    if (userRole == 'company') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const CompanyProfileSetupPage(),
+        ),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ProfileCvScreen(),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    print('Building AuthenticatedLayout - isLoading: $_isLoading, userRole: $userRole');
-    
-    // Always show the navbar for company users
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       body: widget.child,
-      bottomNavigationBar: CompanyNavbar(
-        currentIndex: widget.currentIndex ?? 0,
-        onTap: widget.onNavItemTap ?? (_) {},
-      ),
+      bottomNavigationBar: userRole == 'company' 
+        ? CompanyNavbar(
+            currentIndex: widget.currentIndex ?? 0,
+            onTap: widget.onNavItemTap ?? (_) {},
+            onProfileTap: () => _handleProfileTap(context),
+          )
+        : Navbar(
+            currentIndex: widget.currentIndex ?? 0,
+            onTap: widget.onNavItemTap ?? (_) {},
+          ),
     );
   }
 } 

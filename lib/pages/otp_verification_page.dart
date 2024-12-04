@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/custom_button.dart';
 import '../services/user_service.dart';
+import '../screens/company_profile_setup_page.dart';
 
 class OTPVerificationPage extends StatefulWidget {
   final String verificationId;
@@ -73,6 +75,28 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
       if (userCredential.user != null) {
         if (widget.userType != null) {
           await UserService().createNewUser(userCredential.user!, widget.userType!);
+          
+          if (widget.userType == 'company') {
+            final userDoc = await FirebaseFirestore.instance
+                .collection('users')
+                .doc(userCredential.user!.uid)
+                .get();
+            
+            final userData = userDoc.data();
+            final bool isProfileComplete = userData?['isProfileComplete'] ?? false;
+            
+            if (mounted) {
+              if (!isProfileComplete) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CompanyProfileSetupPage(),
+                  ),
+                );
+                return;
+              }
+            }
+          }
         }
         
         if (mounted) {
