@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/job_profile.dart';
 import '../models/job_post.dart';
 
 class JobService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Job Profile CRUD operations
   Future<void> createJobProfile(JobProfile profile) async {
@@ -375,5 +377,76 @@ class JobService {
 
   Future<DocumentSnapshot> getJobPosting(String id) {
     return _firestore.collection('job_postings').doc(id).get();
+  }
+
+  Stream<List<JobPost>> getFavoriteJobs() {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) {
+      return Stream.value([]);
+    }
+
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('favorites')
+        .snapshots()
+        .asyncMap((snapshot) async {
+          final favoriteJobIds = snapshot.docs.map((doc) => doc.id).toList();
+          if (favoriteJobIds.isEmpty) {
+            return [];
+          }
+
+          // Fetch all favorite jobs
+          final jobDocs = await Future.wait(
+            favoriteJobIds.map((jobId) => 
+              _firestore.collection('jobs').doc(jobId).get()
+            )
+          );
+
+          // Filter out any non-existent jobs and convert to JobPost objects
+          return jobDocs
+              .where((doc) => doc.exists)
+              .map((doc) => JobPost.fromFirestore(doc))
+              .toList();
+        });
+  }
+
+  // Add a method to toggle favorite status
+  Future<void> toggleFavoriteJob(String jobId) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final favoriteRef = _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('favorites')
+        .doc(jobId);
+
+    final doc = await favoriteRef.get();
+    if (doc.exists) {
+      await favoriteRef.delete();
+    } else {
+      await favoriteRef.set({
+        'addedAt': FieldValue.serverTimestamp(),
+      });
+    }
+  }
+
+  // Add a method to check if a job is favorited
+  Stream<bool> isJobFavorited(String jobId) {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) {
+      return Stream.value(false);
+    }
+
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('favorites')
+        .doc(jobId)
+        .snapshots()
+        .map((doc) => doc.exists);
   }
 }
