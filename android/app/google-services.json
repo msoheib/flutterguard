@@ -1,43 +1,26 @@
 {
   "project_info": {
-    "project_number": "164616734121",
-    "project_id": "securityharisguard",
-    "storage_bucket": "securityharisguard.firebasestorage.app"
+    "project_number": "470029267110",
+    "project_id": "harrisg-1a878",
+    "storage_bucket": "harrisg-1a878.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:164616734121:android:31ea065c01d7eb187530b8",
+        "mobilesdk_app_id": "1:470029267110:android:801f902e82ecb008528467",
         "android_client_info": {
-          "package_name": "com.securityharisguard.app"
+          "package_name": "com.security_guard.app"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "164616734121-1bnkao7i4v0sq0atpvdocdtocm8d00cn.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBJrtHrmAFbFvcF5hoPIRpndecUyGoMyzU"
+          "current_key": "AIzaSyA2OwLBBQ0f2ogtQoOXnTTVIcj2bpaRhrI"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "164616734121-1bnkao7i4v0sq0atpvdocdtocm8d00cn.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "164616734121-1qmdug9vjiujjgbgldrrtjaki3gvmf9r.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.example.securityGuard"
-              }
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

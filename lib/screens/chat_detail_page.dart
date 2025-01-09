@@ -9,10 +9,10 @@ class ChatDetailPage extends StatefulWidget {
   final bool isCompany;
 
   const ChatDetailPage({
-    Key? key,
+    super.key,
     required this.chat,
     required this.isCompany,
-  }) : super(key: key);
+  });
 
   @override
   State<ChatDetailPage> createState() => _ChatDetailPageState();

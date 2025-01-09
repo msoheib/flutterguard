@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:security_guard/models/job_post.dart';
-import 'package:security_guard/screens/job_detail_page.dart';
+import 'package:security_guard/pages/job_details_page.dart';
 
 class JobListingCard extends StatelessWidget {
   final JobPost job;
@@ -33,7 +33,7 @@ class JobListingCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
+          SizedBox(
             height: 168,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -100,9 +100,7 @@ class JobListingCard extends StatelessWidget {
                                 color: Color(0xFFF3F3F3),
                                 shape: OvalBorder(),
                               ),
-                              child: job.companyLogo.isNotEmpty
-                                  ? Image.network(job.companyLogo)
-                                  : const Icon(Icons.business, color: Color(0xFF6A6A6A)),
+                              child: const Icon(Icons.business, color: Color(0xFF6A6A6A)),
                             ),
                           ],
                         ),
@@ -129,7 +127,7 @@ class JobListingCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              job.company,
+                              job.companyName,
                               style: const TextStyle(
                                 color: Color(0xFF6A6A6A),
                                 fontSize: 12,
@@ -175,7 +173,7 @@ class JobListingCard extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        job.type,
+                        job.typeAsString,
                         style: const TextStyle(
                           color: Color(0xFF6A6A6A),
                           fontSize: 10,
@@ -192,7 +190,9 @@ class JobListingCard extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => JobDetailPage(job: job),
+                        builder: (context) => JobDetailsPage(
+                          jobId: job.id,
+                        ),
                       ),
                     );
                   },

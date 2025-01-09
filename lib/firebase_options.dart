@@ -1,18 +1,14 @@
 // lib/firebase_options.dart
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
-import 'package:flutter/foundation.dart'
-     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
-    // Replace with your Firebase configuration
     return const FirebaseOptions(
-      apiKey: "AIzaSyCcsHxpMkN7mFeOdFU6mSSXgSJ2yz1yluI",
-      authDomain: "securityharisguard.firebaseapp.com",
-      projectId: "securityharisguard",
-      storageBucket: "securityharisguard.appspot.com",
-      messagingSenderId: "164616734121",
-      appId: "1:164616734121:web:3befe41105ef94ab7530b8"
+      apiKey: "AIzaSyA2OwLBBQ0f2ogtQoOXnTTVIcj2bpaRhrI",
+      projectId: "harrisg-1a878",
+      storageBucket: "harrisg-1a878.firebasestorage.app",
+      messagingSenderId: "470029267110",
+      appId: "1:470029267110:android:801f902e82ecb008528467"
     );
   }
 }

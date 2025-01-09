@@ -3,15 +3,13 @@ import 'package:flutter_svg/flutter_svg.dart'
 ;
 
 class SearchBarWidget extends StatelessWidget {
-  final TextEditingController? controller;
-  final VoidCallback? onFilterTap;
-  final Function(String)? onSearch;
+  final VoidCallback onFilterTap;
+  final Function(String) onSearch;
 
   const SearchBarWidget({
     super.key,
-    this.controller,
-    this.onFilterTap,
-    this.onSearch,
+    required this.onFilterTap,
+    required this.onSearch,
   });
 
   @override
@@ -20,51 +18,40 @@ class SearchBarWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 28.0),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: ShapeDecoration(
-              color: const Color(0xFF4CA6A8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onFilterTap,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4CA6A8),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    'assets/media/icons/filter.svg',
+                    width: 24,
+                    height: 24,
+                    color: Colors.white,
+                  ),
+                ),
               ),
-            ),
-            child: IconButton(
-                icon: SvgPicture.asset('assets/media/icons/adjust-horizontal-alt.svg',
-                width: 24,
-                height: 24,
-                color: Colors.white,
-              ),
-              onPressed: onFilterTap,
-              padding: EdgeInsets.zero,
             ),
           ),
           const SizedBox(width: 13),
           Expanded(
-            child: Container(
-              height: 44,
-              decoration: ShapeDecoration(
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+            child: Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
               child: TextField(
-                controller: controller,
                 textAlign: TextAlign.right,
                 decoration: const InputDecoration(
                   hintText: 'ابحث هنا...',
-                  hintStyle: TextStyle(
-                    color: Color(0xFF6A6A6A),
-                    fontSize: 14,
-                    fontFamily: 'Cairo',
-                    fontWeight: FontWeight.w500,
-                  ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16),
                 ),
                 onChanged: onSearch,
               ),

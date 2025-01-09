@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/custom_button.dart';
 import '../services/user_service.dart';
 import '../screens/company_profile_setup_page.dart';
+import '../pages/job_seeker_home_page.dart';
 
 class OTPVerificationPage extends StatefulWidget {
   final String verificationId;
@@ -82,6 +83,52 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                 .doc(userCredential.user!.uid)
                 .get();
             
+            if (!userDoc.exists) {
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(userCredential.user!.uid)
+                  .set({
+                'phoneNumber': userCredential.user!.phoneNumber,
+                'role': 'jobseeker', // Default role for new users
+                'createdAt': FieldValue.serverTimestamp(),
+                'lastUpdated': FieldValue.serverTimestamp(),
+                'applicationCount': 0,
+                'profile': {
+                  'personalInfo': {
+                    'fullName': '',
+                    'email': '',
+                    'dateOfBirth': null,
+                    'nationality': '',
+                    'city': '',
+                    'profilePicture': '',
+                    'gender': '',
+                    'maritalStatus': '',
+                  },
+                  'aboutMe': {
+                    'description': '',
+                    'title': '',
+                    'summary': '',
+                  },
+                  'workExperience': [],
+                  'education': [],
+                  'skills': [],
+                  'languages': [],
+                  'certificates': [],
+                  'preferences': {
+                    'jobTypes': [],
+                    'expectedSalary': {
+                      'min': 0,
+                      'max': 0,
+                      'currency': 'SAR'
+                    },
+                    'preferredLocations': [],
+                    'willingToTravel': false,
+                    'willingToRelocate': false
+                  }
+                }
+              });
+            }
+            
             final userData = userDoc.data();
             final bool isProfileComplete = userData?['isProfileComplete'] ?? false;
             
@@ -100,7 +147,11 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
         }
         
         if (mounted) {
-          Navigator.pushReplacementNamed(context, '/home');
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const JobSeekerHomePage()),
+            (route) => false,
+          );
         }
       }
     } catch (e) {

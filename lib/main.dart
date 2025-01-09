@@ -1,21 +1,99 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'widgets/auth_wrapper.dart';
 import 'pages/login_page.dart';
-import 'pages/splash_screen.dart';
 import 'pages/signup_page.dart';
-import 'pages/home_page.dart';
 import 'pages/profile_cv_screen.dart';
-import 'services/job_service.dart';
+import 'pages/settings_page.dart';
+import 'services/service_locator.dart';
+import 'services/notification_service.dart';
+import 'services/navigation_service.dart';
+import 'pages/job_details_page.dart';
+import 'widgets/auth_wrapper.dart';
+import 'pages/job_seeker_home_page.dart';
+import 'pages/applications_history_page.dart';
+import 'pages/chat_page.dart';
+import 'pages/company/company_home_page.dart';
+import 'pages/company/company_applications_page.dart';
+import 'pages/company/company_chat_page.dart';
+import 'screens/create_job_page.dart';
+import 'pages/company/company_settings_page.dart';
+import 'pages/superadmin_page.dart';
+import 'theme/app_theme.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  
-  // Create sample data
-  await JobService().createSampleJobs();
-  
-  runApp(const MyApp());
+Future<void> main() async {
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    
+    // Firebase initialization
+    await Firebase.initializeApp();
+    
+    // Setup service locator
+    setupServices();
+    
+    // Initialize navigation service first
+    await NavigationService.initDeepLinks().catchError((e) {
+      print('Deep links initialization error (non-fatal): $e');
+    });
+
+    // Initialize notifications service
+    try {
+      await NotificationService().init();
+    } catch (e) {
+      print('Notification initialization error (non-fatal): $e');
+    }
+    
+    runApp(const MyApp());
+  } catch (e) {
+    print('Critical initialization error: $e');
+    runApp(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: Colors.red,
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'عذراً، حدث خطأ أثناء تشغيل التطبيق',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Cairo',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  e.toString(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontFamily: 'Cairo',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    main();
+                  },
+                  child: const Text(
+                    'إعادة المحاولة',
+                    style: TextStyle(fontFamily: 'Cairo'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ));
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -24,35 +102,132 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Login Demo',
+      navigatorKey: NavigationService.navigatorKey,
+      title: 'Security Guard App',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'Cairo',
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(fontFamily: 'Cairo'),
-          displayMedium: TextStyle(fontFamily: 'Cairo'),
-          displaySmall: TextStyle(fontFamily: 'Cairo'),
-          headlineLarge: TextStyle(fontFamily: 'Cairo'),
-          headlineMedium: TextStyle(fontFamily: 'Cairo'),
-          headlineSmall: TextStyle(fontFamily: 'Cairo'),
-          titleLarge: TextStyle(fontFamily: 'Cairo'),
-          titleMedium: TextStyle(fontFamily: 'Cairo'),
-          titleSmall: TextStyle(fontFamily: 'Cairo'),
-          bodyLarge: TextStyle(fontFamily: 'Cairo'),
-          bodyMedium: TextStyle(fontFamily: 'Cairo'),
-          bodySmall: TextStyle(fontFamily: 'Cairo'),
-          labelLarge: TextStyle(fontFamily: 'Cairo'),
-          labelMedium: TextStyle(fontFamily: 'Cairo'),
-          labelSmall: TextStyle(fontFamily: 'Cairo'),
+        // Colors
+        primaryColor: AppTheme.primary,
+        colorScheme: ColorScheme.light(
+          primary: AppTheme.primary,
+          secondary: AppTheme.secondary,
+          error: AppTheme.error,
+          background: AppTheme.background,
+          surface: AppTheme.surface,
         ),
+        
+        // Text Theme
+        textTheme: TextTheme(
+          displayLarge: AppTheme.headingLarge,
+          displayMedium: AppTheme.headingMedium,
+          displaySmall: AppTheme.headingSmall,
+          bodyLarge: AppTheme.bodyLarge,
+          bodyMedium: AppTheme.bodyMedium,
+          bodySmall: AppTheme.bodySmall,
+          labelLarge: AppTheme.labelLarge,
+          labelMedium: AppTheme.labelMedium,
+          labelSmall: AppTheme.labelSmall,
+        ),
+        
+        // Font Family
+        fontFamily: 'Cairo',
+        
+        // Input Decoration
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: AppTheme.surface,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            borderSide: const BorderSide(color: AppTheme.borderColor),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            borderSide: const BorderSide(color: AppTheme.borderColor),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            borderSide: const BorderSide(color: AppTheme.primary),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            borderSide: const BorderSide(color: AppTheme.error),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spacingMd,
+            vertical: AppTheme.spacingSm,
+          ),
+        ),
+        
+        // Elevated Button Theme
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: AppTheme.primaryButton,
+        ),
+        
+        // Card Theme
+        cardTheme: CardTheme(
+          color: AppTheme.surface,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            side: const BorderSide(color: AppTheme.borderColor),
+          ),
+        ),
+        
+        // App Bar Theme
+        appBarTheme: AppBarTheme(
+          backgroundColor: AppTheme.surface,
+          elevation: 0,
+          centerTitle: true,
+          titleTextStyle: AppTheme.headingSmall,
+          iconTheme: const IconThemeData(color: AppTheme.textPrimary),
+        ),
+        
+        // Bottom Navigation Bar Theme
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: AppTheme.surface,
+          selectedItemColor: AppTheme.primary,
+          unselectedItemColor: AppTheme.textSecondary,
+          type: BottomNavigationBarType.fixed,
+          elevation: 8,
+          selectedLabelStyle: AppTheme.labelMedium,
+          unselectedLabelStyle: AppTheme.labelMedium,
+        ),
+        
+        // Divider Theme
+        dividerTheme: const DividerThemeData(
+          color: AppTheme.dividerColor,
+          thickness: 1,
+          space: AppTheme.spacingMd,
+        ),
+        
+        // Scaffold Background Color
+        scaffoldBackgroundColor: AppTheme.background,
       ),
-      home: const SplashScreen(),
+      initialRoute: '/',
       routes: {
+        '/': (context) => const AuthWrapper(),
+        // Auth routes
         '/login': (context) => const LoginPage(),
         '/signup': (context) => const SignupPage(),
-        '/home': (context) => const HomePage(),
+        
+        // Job seeker routes
+        '/jobseeker/home': (context) => const JobSeekerHomePage(),
+        '/jobseeker/applications': (context) => const ApplicationsHistoryPage(),
+        '/jobseeker/chat': (context) => const ChatPage(),
+        '/jobseeker/settings': (context) => const SettingsPage(),
+        
+        // Company routes
+        '/company/home': (context) => const CompanyHomePage(),
+        '/company/applications': (context) => const CompanyApplicationsPage(),
+        '/company/chat': (context) => const CompanyChatPage(),
+        '/company/create-job': (context) => const CreateJobPage(),
+        '/company/settings': (context) => const CompanySettingsPage(),
+        
+        // Common routes
         '/profile': (context) => const ProfileCvScreen(),
-        '/auth': (context) => const AuthWrapper(),
+        '/job-details': (context) => JobDetailsPage(
+          jobId: ModalRoute.of(context)!.settings.arguments as String,
+        ),
+        '/superadmin': (context) => const SuperAdminPage(),
       },
     );
   }

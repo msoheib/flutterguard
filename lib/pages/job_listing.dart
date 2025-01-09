@@ -4,7 +4,7 @@ import '../services/job_service.dart';
 import '../models/job_post.dart';
 
 class JobListings extends StatefulWidget {
-  const JobListings({Key? key}) : super(key: key);
+  const JobListings({super.key});
 
   @override
   State<JobListings> createState() => JobListingsState();
@@ -25,9 +25,6 @@ class JobListingsState extends State<JobListings> {
 
   Future<void> _loadJobs() async {
     try {
-      await _jobService.createSampleJobPostings();
-      print('Created sample job postings');
-
       _jobService.getJobPosts(filters: _activeFilters).listen(
         (jobs) {
           print('Received ${jobs.length} jobs with filters: $_activeFilters');

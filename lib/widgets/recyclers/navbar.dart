@@ -1,142 +1,123 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../services/navigation_service.dart';
 
-class Navbar extends StatefulWidget {
+class Navbar extends StatelessWidget {
   final int currentIndex;
-  final Function(int) onTap;
 
   const Navbar({
     super.key,
     required this.currentIndex,
-    required this.onTap,
   });
 
   @override
-  State<Navbar> createState() => _NavbarState();
-}
-
-class _NavbarState extends State<Navbar> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-  int? _pressedIndex;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 100),
-      vsync: this,
-    );
-
-    _animation = Tween<double>(begin: 1.0, end: 0.8).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onItemTapped(int index) async {
-    if (widget.currentIndex == index) return;
-
-    setState(() => _pressedIndex = index);
-    
-    // Play tap animation and haptic feedback
-    _controller.forward().then((_) {
-      _controller.reverse().then((_) {
-        setState(() => _pressedIndex = null);
-      });
-    });
-    HapticFeedback.lightImpact();
-
-    widget.onTap(index);
-    NavigationService.navigateToPage(context, index);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 70,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      decoration: const ShapeDecoration(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(30.50),
-            topRight: Radius.circular(30.50),
-          ),
-        ),
-        shadows: [
-          BoxShadow(
-            color: Color(0x3FCCCCCC),
-            blurRadius: 16,
-            offset: Offset(0, -2),
-            spreadRadius: 0,
-          )
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    return SizedBox(
+      height: 104,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _buildNavItem(3, 'الرئيسة', 'assets/media/icons/Home.svg', 'assets/media/icons/Home_selected.svg'),
-          _buildNavItem(2, 'الرسائل', 'assets/media/icons/Chat.svg', 'assets/media/icons/Chat_selected.svg'),
-          _buildNavItem(1, 'المفضلة', 'assets/media/icons/Ahead.svg', 'assets/media/icons/Ahead_selected.svg'),
-          _buildNavItem(0, 'الأعدادت', 'assets/media/icons/Setting.svg', 'assets/media/icons/Setting_selected.svg'),
-        ].reversed.toList(),
+          Container(
+            width: screenWidth,
+            height: 70,
+            decoration: ShapeDecoration(
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30.50),
+                  topRight: Radius.circular(30.50),
+                ),
+              ),
+              shadows: [
+                BoxShadow(
+                  color: Color(0x3FCCCCCC),
+                  blurRadius: 16,
+                  offset: Offset(0, -2),
+                  spreadRadius: 0,
+                )
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildNavItem(context, 3, 'الأعدادت', 'assets/media/icons/settings.svg'),
+                  _buildNavItem(context, 2, 'المفصلة', 'assets/media/icons/bookmark.svg'),
+                  _buildNavItem(context, 1, 'الرسائل', 'assets/media/icons/Chat.svg'),
+                  _buildNavItem(context, 0, 'الرئيسة', 'assets/media/icons/Home.svg'),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            width: screenWidth,
+            height: 34,
+            padding: const EdgeInsets.only(
+              top: 21,
+              bottom: 8,
+            ),
+            decoration: BoxDecoration(color: Colors.white),
+            child: Center(
+              child: Container(
+                width: 134,
+                height: 5,
+                decoration: ShapeDecoration(
+                  color: Color(0xFF1E293B),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildNavItem(int index, String label, String icon, String selectedIcon) {
-    final bool isSelected = widget.currentIndex == index;
-    final bool isPressed = _pressedIndex == index;
+  Widget _buildNavItem(BuildContext context, int index, String label, String iconPath) {
+    final isSelected = currentIndex == index;
+    final routes = [
+      '/jobseeker/home',
+      '/jobseeker/chat',
+      '/jobseeker/filter',
+      '/jobseeker/settings',
+    ];
 
-    Widget content = Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        SvgPicture.asset(
-          isSelected ? selectedIcon : icon,
-          width: 20,
-          height: 20,
-          color: isSelected ? const Color(0xFF4CA6A8) : const Color(0xFFA8A8AA),
+    final Color color = isSelected ? const Color(0xFF4CA6A8) : const Color(0xFFA8A8AA);
+
+    return GestureDetector(
+      onTap: () => Navigator.pushReplacementNamed(context, routes[index]),
+      child: Container(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              iconPath,
+              width: 20,
+              height: 20,
+              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontFamily: 'Cairo',
+                fontWeight: FontWeight.w400,
+                height: 1,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? const Color(0xFF4CA6A8) : const Color(0xFFA8A8AA),
-            fontSize: 12,
-            fontFamily: 'Cairo',
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-      ],
-    );
-
-    if (isPressed) {
-      content = ScaleTransition(
-        scale: _animation,
-        child: content,
-      );
-    }
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => _onItemTapped(index),
-        child: content,
       ),
     );
   }

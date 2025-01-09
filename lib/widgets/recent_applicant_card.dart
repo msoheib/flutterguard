@@ -43,7 +43,7 @@ class RecentApplicantCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Time ago section
-          Container(
+          SizedBox(
             width: double.infinity,
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -87,7 +87,7 @@ class RecentApplicantCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           // Applicant info and buttons
-          Container(
+          SizedBox(
             height: 127,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -95,7 +95,7 @@ class RecentApplicantCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 // Applicant info
-                Container(
+                SizedBox(
                   width: double.infinity,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -151,7 +151,7 @@ class RecentApplicantCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 // Action buttons
-                Container(
+                SizedBox(
                   width: double.infinity,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

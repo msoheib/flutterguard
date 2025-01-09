@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/custom_button.dart';
 import 'otp_verification_page.dart';
+import '../widgets/auth_wrapper.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -57,7 +58,11 @@ class _LoginPageState extends State<LoginPage> {
         verificationCompleted: (PhoneAuthCredential credential) async {
           await FirebaseAuth.instance.signInWithCredential(credential);
           if (mounted) {
-            Navigator.pushReplacementNamed(context, '/home');
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const AuthWrapper()),
+              (route) => false,
+            );
           }
         },
         verificationFailed: (FirebaseAuthException e) {

@@ -10,7 +10,7 @@ class RecentApplicantsList extends StatelessWidget {
   Widget build(BuildContext context) {
     final jobApplicationService = JobApplicationService();
 
-    return Container(
+    return SizedBox(
       width: 319,
       height: 650,
       child: Column(

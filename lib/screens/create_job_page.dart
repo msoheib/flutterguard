@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import '../widgets/authenticated_layout.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../services/city_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CreateJobPage extends StatefulWidget {
-  const CreateJobPage({Key? key}) : super(key: key);
+  const CreateJobPage({super.key});
 
   @override
   State<CreateJobPage> createState() => _CreateJobPageState();
@@ -492,10 +491,10 @@ class _CreateJobPageState extends State<CreateJobPage> {
         ),
         const SizedBox(height: 6),
         Container(
-          decoration: const ShapeDecoration(
-            color: Color(0xFFF5F5F5),
+          decoration: ShapeDecoration(
+            color: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(12)),
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
           child: StreamBuilder<List<String>>(
@@ -509,28 +508,38 @@ class _CreateJobPageState extends State<CreateJobPage> {
                 return const Center(child: CircularProgressIndicator());
               }
 
+              final cities = snapshot.data!;
+
               return DropdownButtonFormField<String>(
                 value: _selectedCity,
-                items: [
-                  if (_selectedCity != null)
-                    DropdownMenuItem<String>(
-                      value: _selectedCity,
-                      child: Text(
-                        _selectedCity!,
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(
-                          color: Color(0xFF6A6A6A),
-                          fontSize: 14,
-                          fontFamily: 'Cairo',
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
+                items: cities.map((city) => DropdownMenuItem(
+                  value: city,
+                  child: Text(
+                    city,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      color: Color(0xFF6A6A6A),
+                      fontSize: 14,
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.w400,
                     ),
-                ],
-                onChanged: null, // Disable dropdown
+                  ),
+                )).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCity = value;
+                  });
+                },
                 decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.all(8),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   border: InputBorder.none,
+                  hintText: 'اختر المدينة',
+                  hintStyle: TextStyle(
+                    color: Color(0xFF6A6A6A),
+                    fontSize: 14,
+                    fontFamily: 'Cairo',
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
                 isExpanded: true,
                 alignment: AlignmentDirectional.centerEnd,

@@ -28,10 +28,6 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
-apply plugin: 'com.android.application'
-apply plugin: 'com.google.gms.google-services'
-apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
-
 android {
     namespace "com.example.security_guard"
     compileSdkVersion flutter.compileSdkVersion
@@ -51,7 +47,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.securityharisguard.app"
+        applicationId "com.security_guard.app"
         minSdkVersion 23
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()

@@ -4,70 +4,72 @@ class Company {
   final String id;
   final String name;
   final String email;
-  final String phone;
-  final String logo;
+  final String phoneNumber;
   final String description;
+  final String? logo;
+  final String? website;
   final String location;
-  final String website;
-  final String size;
-  final String industry;
-  final bool isVerified;
-  final List<String> postedJobs;
   final DateTime createdAt;
-  final DateTime updatedAt;
+  final bool isVerified;
+  final bool isActive;
+  final int totalJobs;
+  final String industry;
+  final String size;
 
   Company({
     required this.id,
     required this.name,
     required this.email,
-    required this.phone,
-    required this.logo,
+    required this.phoneNumber,
     required this.description,
+    this.logo,
+    this.website,
     required this.location,
-    required this.website,
-    required this.size,
-    required this.industry,
-    this.isVerified = false,
-    required this.postedJobs,
     required this.createdAt,
-    required this.updatedAt,
+    required this.isVerified,
+    required this.isActive,
+    required this.totalJobs,
+    required this.industry,
+    required this.size,
   });
 
-  factory Company.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'email': email,
+      'phoneNumber': phoneNumber,
+      'description': description,
+      'logo': logo,
+      'website': website,
+      'location': location,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'isVerified': isVerified,
+      'isActive': isActive,
+      'totalJobs': totalJobs,
+      'industry': industry,
+      'size': size,
+    };
+  }
+
+  static Company fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
     return Company(
       id: doc.id,
       name: data['name'] ?? '',
       email: data['email'] ?? '',
-      phone: data['phone'] ?? '',
-      logo: data['logo'] ?? '',
+      phoneNumber: data['phoneNumber'] ?? '',
       description: data['description'] ?? '',
+      logo: data['logo'],
+      website: data['website'],
       location: data['location'] ?? '',
-      website: data['website'] ?? '',
-      size: data['size'] ?? '',
-      industry: data['industry'] ?? '',
-      isVerified: data['isVerified'] ?? false,
-      postedJobs: List<String>.from(data['postedJobs'] ?? []),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      isVerified: data['isVerified'] ?? false,
+      isActive: data['isActive'] ?? true,
+      totalJobs: data['totalJobs'] ?? 0,
+      industry: data['industry'] ?? '',
+      size: data['size'] ?? '',
     );
   }
 
-  Map<String, dynamic> toFirestore() {
-    return {
-      'name': name,
-      'email': email,
-      'phone': phone,
-      'logo': logo,
-      'description': description,
-      'location': location,
-      'website': website,
-      'size': size,
-      'industry': industry,
-      'isVerified': isVerified,
-      'postedJobs': postedJobs,
-      'createdAt': Timestamp.fromDate(createdAt),
-      'updatedAt': Timestamp.fromDate(updatedAt),
-    };
-  }
+  Map<String, dynamic> toFirestore() => toMap();
 } 

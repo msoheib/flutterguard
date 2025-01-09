@@ -3,87 +3,74 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class JobPost {
   final String id;
   final String title;
-  final String company;
-  final String companyLogo;
+  final String companyId;
+  final String companyName;
   final String location;
   final Map<String, dynamic> salary;
   final String type;
   final String description;
-  final List<String> requirements;
-  final List<String> qualifications;
-  final List<String> skills;
-  final String status;
-  final String hirerId;
-  final int applicationsCount;
+  final List<String> requiredSkills;
   final DateTime createdAt;
-  final DateTime updatedAt;
-  final Map<String, dynamic> filters;
+  final List<String> skills;
 
   JobPost({
     required this.id,
     required this.title,
-    required this.company,
-    this.companyLogo = '',
+    required this.companyId,
+    required this.companyName,
     required this.location,
     required this.salary,
     required this.type,
     required this.description,
-    required this.requirements,
-    required this.qualifications,
-    required this.skills,
-    required this.status,
-    required this.hirerId,
-    required this.applicationsCount,
+    required this.requiredSkills,
     required this.createdAt,
-    required this.updatedAt,
-    required this.filters,
-  });
+    List<String>? skills,
+  }) : skills = skills ?? [];
 
-  Map<String, dynamic> toMap() {
-    return {
-      'title': title,
-      'company': company,
-      'companyLogo': companyLogo,
-      'location': location,
-      'salary': salary,
-      'type': type,
-      'description': description,
-      'requirements': requirements,
-      'qualifications': qualifications,
-      'skills': skills,
-      'status': status,
-      'hirerId': hirerId,
-      'applicationsCount': applicationsCount,
-      'createdAt': Timestamp.fromDate(createdAt),
-      'updatedAt': Timestamp.fromDate(updatedAt),
-      'filters': filters,
-    };
+  String get typeAsString {
+    switch (type) {
+      case 'full-time':
+        return 'دوام كامل';
+      case 'part-time':
+        return 'دوام جزئي';
+      case 'contract':
+        return 'عقد';
+      default:
+        return type;
+    }
   }
 
-  Map<String, dynamic> toFirestore() {
-    return toMap();
-  }
-
-  static JobPost fromFirestore(DocumentSnapshot doc) {
+  factory JobPost.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return JobPost(
       id: doc.id,
       title: data['title'] ?? '',
-      company: data['company'] ?? '',
-      companyLogo: data['companyLogo'] ?? '',
+      companyId: data['companyId'] ?? '',
+      companyName: data['companyName'] ?? '',
       location: data['location'] ?? '',
-      salary: data['salary'] ?? {},
-      type: data['type'] ?? '',
+      salary: data['salary'] ?? {'amount': '0', 'currency': 'SAR'},
+      type: data['type'] ?? 'full-time',
       description: data['description'] ?? '',
-      requirements: List<String>.from(data['requirements'] ?? []),
-      qualifications: List<String>.from(data['qualifications'] ?? []),
+      requiredSkills: List<String>.from(data['requiredSkills'] ?? []),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       skills: List<String>.from(data['skills'] ?? []),
-      status: data['status'] ?? 'active',
-      hirerId: data['hirerId'] ?? '',
-      applicationsCount: data['applicationsCount'] ?? 0,
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
-      filters: data['filters'] ?? {},
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'companyId': companyId,
+      'companyName': companyName,
+      'location': location,
+      'salary': salary,
+      'type': type,
+      'description': description,
+      'requiredSkills': requiredSkills,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'skills': skills,
+    };
+  }
+
+  Map<String, dynamic> toFirestore() => toMap();
 }

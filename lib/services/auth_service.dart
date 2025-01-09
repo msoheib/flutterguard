@@ -1,9 +1,50 @@
 // services/auth_service.dart
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:math';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
+  // Generate unique IDs with prefixes
+  String generateUserId(String type) {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final random = Random().nextInt(9999).toString().padLeft(4, '0');
+    switch (type) {
+      case 'jobseeker':
+        return 'JS$timestamp$random';
+      case 'company':
+        return 'CO$timestamp$random';
+      default:
+        return 'US$timestamp$random';
+    }
+  }
+
+  // Create new user with custom ID
+  Future<UserCredential> createUser({
+    required String email,
+    required String password,
+    required String type,
+  }) async {
+    final userCredential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    final customId = generateUserId(type);
+    
+    // Create user document with custom ID
+    await _firestore.collection('users').doc(customId).set({
+      'email': email,
+      'type': type,
+      'createdAt': FieldValue.serverTimestamp(),
+      'authUid': userCredential.user!.uid, // Store Firebase Auth UID for reference
+    });
+
+    return userCredential;
+  }
+
   // Send OTP
   Future<void> sendOTP(
     String phoneNumber,

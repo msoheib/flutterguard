@@ -1,43 +1,46 @@
 // widgets/auth_wrapper.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../pages/job_seeker_home_page.dart';
+import '../pages/login_page.dart';
+import '../pages/company/company_home_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {
-    print("Building AuthWrapper"); // Debug print
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        print("Auth State: ${snapshot.connectionState}"); // Debug print
-        
         if (snapshot.connectionState == ConnectionState.waiting) {
-          print("Waiting for auth state"); // Debug print
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
-        
-        if (snapshot.hasData) {
-          print("User is logged in"); // Debug print
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushReplacementNamed(context, '/home');
-          });
-        } else {
-          print("User is not logged in"); // Debug print
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushReplacementNamed(context, '/login');
-          });
+
+        if (!snapshot.hasData) {
+          return const LoginPage();
         }
-        
-        return const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
-          ),
+
+        return StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .doc(snapshot.data!.uid)
+              .snapshots(),
+          builder: (context, userSnapshot) {
+            if (userSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final userData = userSnapshot.data?.data() as Map<String, dynamic>?;
+            final userType = userData?['role'] as String?;
+
+            if (userType == 'company') {
+              return const CompanyHomePage();
+            }
+
+            return const JobSeekerHomePage();
+          },
         );
       },
     );

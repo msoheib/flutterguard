@@ -11,42 +11,30 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    print("Splash Screen initialized");
-    Future.delayed(const Duration(seconds: 3), () {
-      print("Splash Screen delay completed");
-      if (mounted) {
-        print("Attempting to navigate to login");
-        Navigator.pushReplacementNamed(context, '/login');
-      }
-    });
+    _navigateToNextScreen();
+  }
+
+  Future<void> _navigateToNextScreen() async {
+    // Add a small delay to show splash screen
+    await Future.delayed(const Duration(seconds: 2));
+    
+    if (!mounted) return;
+    
+    // Navigate to login page
+    Navigator.of(context).pushReplacementNamed('/login');
   }
 
   @override
   Widget build(BuildContext context) {
-    print("Building Splash Screen");
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return const Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'لوقو التطبيق',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const CircularProgressIndicator(),
-            const SizedBox(height: 20),
-            const Text(
-              'Your App Name',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            // Add your logo or splash screen content here
+            CircularProgressIndicator(),
+            SizedBox(height: 20),
+            Text('Loading...'),
           ],
         ),
       ),

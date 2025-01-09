@@ -7,6 +7,20 @@ class JobApplicationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  // Get applications for the current user (job seeker)
+  Future<List<JobApplication>> getUserApplications() async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return [];
+
+    final snapshot = await _firestore
+        .collection('applications')
+        .where('userId', isEqualTo: userId)
+        .orderBy('appliedAt', descending: true)
+        .get();
+
+    return snapshot.docs.map((doc) => JobApplication.fromFirestore(doc)).toList();
+  }
+
   // Get recent applications for a company
   Stream<List<JobApplication>> getCompanyApplications() {
     final userId = _auth.currentUser?.uid;
@@ -40,8 +54,8 @@ class JobApplicationService {
     // Check if user has already applied
     final existingApplication = await _firestore
         .collection('applications')
-        .where('jobId', isEqualTo: job.id)
-        .where('jobSeekerId', isEqualTo: userId)
+        .where('jobId', isEqualTo: job.id ?? '')
+        .where('userId', isEqualTo: userId)
         .get();
 
     if (existingApplication.docs.isNotEmpty) {
@@ -51,19 +65,24 @@ class JobApplicationService {
     // Create new application
     final application = JobApplication(
       id: '', // Will be set by Firestore
-      jobId: job.id,
-      jobSeekerId: userId,
-      jobSeekerName: jobSeekerName,
-      jobTitle: job.title,
-      status: 'pending',
+      userId: userId,
+      status: JobApplication.STATUS_PENDING,
       appliedAt: DateTime.now(),
+      coverLetter: null,
+      attachments: null,
+      jobId: job.id,
+      jobTitle: job.title,
+      companyId: job.companyId,
+      companyName: job.companyName,
     );
 
-    await _firestore.collection('applications').add(application.toMap());
+    // First create the application document
+    final applicationRef = await _firestore.collection('applications').add(application.toMap());
 
-    // Update job applications count
+    // Update job applications count and add application to job's applications map
     await _firestore.collection('jobs').doc(job.id).update({
       'applicationsCount': FieldValue.increment(1),
+      'applications.${applicationRef.id}': application.toMap(),
     });
   }
 
@@ -74,6 +93,7 @@ class JobApplicationService {
 
     await _firestore.collection('applications').doc(applicationId).update({
       'status': status,
+      'reviewedAt': FieldValue.serverTimestamp(),
     });
   }
 

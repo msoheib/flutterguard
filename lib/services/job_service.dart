@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/job_profile.dart';
 import '../models/job_post.dart';
+import 'dart:math';
 
 class JobService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -27,9 +27,30 @@ class JobService {
   }
 
   // Job Post CRUD operations
-  Future<String> createJobPost(JobPost post) async {
-    final docRef = await _firestore.collection('job_posts').add(post.toMap());
-    return docRef.id;
+  String generateJobId() {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final random = Random().nextInt(9999).toString().padLeft(4, '0');
+    return 'JOB$timestamp$random';
+  }
+
+  Future<String> createJob(JobPost job) async {
+    final jobId = generateJobId();
+    
+    // Start a batch write
+    final batch = _firestore.batch();
+    
+    // Create the job document
+    final jobRef = _firestore.collection('jobs').doc(jobId);
+    batch.set(jobRef, {
+      ...job.toMap(),
+      'id': jobId,
+      'status': 'active',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    // Commit the batch
+    await batch.commit();
+    return jobId;
   }
 
   Future<JobPost?> getJobPost(String postId) async {
@@ -174,199 +195,6 @@ class JobService {
     });
   }
 
-  Future<void> createSampleJobs() async {
-    final List<Map<String, dynamic>> sampleJobs = [
-      {
-        'title': 'حارس أمن',
-        'company': 'شركة الأمن المتقدم',
-        'hirerId': 'sample_hirer_1',
-        'description': 'مطلوب حارس أمن للعمل في مجمع سكني',
-        'requirements': ['رخصة أمن سارية', 'خبرة سنتين'],
-        'location': 'الرياض',
-        'salary': {
-          'min': 3000,
-          'max': 4000,
-          'currency': 'SAR'
-        },
-        'type': 'full-time',
-        'status': 'active',
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'applicationsCount': 0,
-        'filters': {
-          'industry': 'security',
-          'experience': 2,
-          'education': 'high_school',
-          'skills': ['security', 'surveillance']
-        }
-      },
-      {
-        'title': 'حارس أمن مناوبات',
-        'company': 'مجموعة الحماية الأمنية',
-        'hirerId': 'sample_hirer_2',
-        'description': 'نبحث عن حراس أمن للعمل بنظام المناوبات في مركز تجاري',
-        'requirements': ['رخصة أمن', 'لياقة بدنية عالية'],
-        'location': 'جدة',
-        'salary': {
-          'min': 3500,
-          'max': 4500,
-          'currency': 'SAR'
-        },
-        'type': 'shift-work',
-        'status': 'active',
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'applicationsCount': 0,
-        'filters': {
-          'industry': 'security',
-          'experience': 1,
-          'education': 'high_school',
-          'skills': ['security', 'physical_fitness']
-        }
-      },
-      {
-        'title': 'مشرف أمن',
-        'company': 'الشركة السعودية للحراسات الأمنية',
-        'hirerId': 'sample_hirer_3',
-        'description': 'مطلوب مشرف أمن للإشراف على فريق من الحراس',
-        'requirements': [
-          'خبرة 5 سنوات',
-          'شهادة في الأمن والسلامة',
-          'مهارات قيادية'
-        ],
-        'location': 'الدمام',
-        'salary': {
-          'min': 5000,
-          'max': 7000,
-          'currency': 'SAR'
-        },
-        'type': 'full-time',
-        'status': 'active',
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'applicationsCount': 0,
-        'filters': {
-          'industry': 'security',
-          'experience': 5,
-          'education': 'bachelors',
-          'skills': ['security_management', 'team_leadership']
-        }
-      },
-      {
-        'title': 'حارس أمن مطار',
-        'company': 'شركة أمن المطارات',
-        'hirerId': 'sample_hirer_4',
-        'description': 'وظائف شاغرة لحراس أمن في مطار الملك خالد الدولي',
-        'requirements': [
-          'إجادة اللغة الإنجليزية',
-          'خبرة في أمن المطارات',
-          'اجتياز الفحص الأمني'
-        ],
-        'location': 'الرياض',
-        'salary': {
-          'min': 4500,
-          'max': 6000,
-          'currency': 'SAR'
-        },
-        'type': 'full-time',
-        'status': 'active',
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'applicationsCount': 0,
-        'filters': {
-          'industry': 'aviation_security',
-          'experience': 3,
-          'education': 'diploma',
-          'skills': ['airport_security', 'english_language']
-        }
-      },
-      {
-        'title': 'حارس أمن ليلي',
-        'company': 'مجمع الرياض التجاري',
-        'hirerId': 'sample_hirer_5',
-        'description': 'مطلوب حارس أمن للفترة المسائية في مجمع تجاري',
-        'requirements': ['رخصة أمن سارية', 'القدرة على العمل ليلاً'],
-        'location': 'الرياض',
-        'salary': {
-          'min': 3800,
-          'max': 4200,
-          'currency': 'SAR'
-        },
-        'type': 'night-shift',
-        'status': 'active',
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'applicationsCount': 0,
-        'filters': {
-          'industry': 'security',
-          'experience': 1,
-          'education': 'high_school',
-          'skills': ['night_security', 'surveillance']
-        }
-      }
-    ];
-
-    for (var job in sampleJobs) {
-      await _firestore.collection('jobs').add(job);
-    }
-  }
-
-  Future<void> createSampleJobPostings() async {
-    print('Checking for existing jobs...');
-    final QuerySnapshot snapshot = await _firestore.collection('jobs').get();
-    print('Found ${snapshot.docs.length} existing jobs');
-
-    if (snapshot.docs.isEmpty) {
-      final List<Map<String, dynamic>> sampleJobs = [
-        {
-          'title': 'حارس أمن',
-          'company': 'شركة الأمن المتقدم',
-          'location': 'الرياض',
-          'type': 'حارس أمن',
-          'salary': {'amount': 3000, 'currency': 'ريال'},
-          'description': 'نبحث عن حارس أمن ذو خبرة',
-          'requirements': ['رخصة قيادة', 'شهادة أمن'],
-          'qualifications': ['دبلوم', 'خبرة 2 سنة'],
-          'skills': ['حارس أمن', 'مراقبة الكاميرات', 'اللياقة البدنية'],
-          'status': 'active',
-          'hirerId': 'sample',
-          'applicationsCount': 0,
-          'createdAt': Timestamp.now(),
-          'updatedAt': Timestamp.now(),
-          'filters': {},
-        },
-        {
-          'title': 'مشرف أمن',
-          'company': 'شركة الحماية الشاملة',
-          'location': 'جدة',
-          'type': 'مشرف أمن',
-          'salary': {'amount': 4000, 'currency': 'ريال'},
-          'description': 'مطلوب مشرف أمن للعمل في مجمع تجاري',
-          'requirements': ['رخصة قيادة', 'شهادة أمن متقدمة'],
-          'qualifications': ['بكالوريوس', 'خبرة 4 سنوات'],
-          'skills': ['إدارة الأزمات', 'مهارات التواصل', 'تقييم الثغرات'],
-          'status': 'active',
-          'hirerId': 'sample',
-          'applicationsCount': 0,
-          'createdAt': Timestamp.now(),
-          'updatedAt': Timestamp.now(),
-          'filters': {},
-        },
-      ];
-
-      print('Creating sample jobs:');
-      for (var jobData in sampleJobs) {
-        print('Creating job:');
-        print('  type: ${jobData['type']}');
-        print('  location: ${jobData['location']}');
-        print('  salary: ${jobData['salary']}');
-        print('  skills: ${jobData['skills']}');
-        await _firestore.collection('jobs').add(jobData);
-      }
-      print('Sample jobs created successfully');
-    }
-  }
-
   Stream<QuerySnapshot> getJobPostings() {
     return _firestore
         .collection('job_postings')
@@ -448,5 +276,54 @@ class JobService {
         .doc(jobId)
         .snapshots()
         .map((doc) => doc.exists);
+  }
+
+  // Add this method to JobService
+  Stream<JobPost?> getJobStream(String jobId) {
+    return _firestore
+        .collection('jobs')
+        .doc(jobId)
+        .snapshots()
+        .map((doc) => doc.exists ? JobPost.fromFirestore(doc) : null);
+  }
+
+  // Get active jobs count for company
+  Stream<int> getActiveJobsCount() {
+    final user = _auth.currentUser;
+    if (user == null) return Stream.value(0);
+
+    // For company users, only show their jobs
+    return _firestore
+        .collection('jobs')
+        .where('status', isEqualTo: 'active')
+        .where('companyId', isEqualTo: user.uid) // Filter by company
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
+  }
+
+  // When updating job status
+  Future<void> updateJobStatus(String jobId, String status) async {
+    await _firestore.collection('jobs').doc(jobId).update({
+      'status': status,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Get total applicants count for company
+  Stream<int> getTotalApplicantsCount() {
+    final user = _auth.currentUser;
+    if (user == null) return Stream.value(0);
+
+    return _firestore
+        .collection('jobs')
+        .where('status', isEqualTo: 'active')
+        .where('companyId', isEqualTo: user.uid) // Filter by company
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.fold<int>(
+            0,
+            (sum, doc) => sum + (doc.data()['applicationsCount'] as int? ?? 0)
+          );
+        });
   }
 }

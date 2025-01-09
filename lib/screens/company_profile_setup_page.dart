@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/city_service.dart';
-import '../services/company_service.dart';
-import '../models/company.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CompanyProfileSetupPage extends StatefulWidget {
-  const CompanyProfileSetupPage({Key? key}) : super(key: key);
+  const CompanyProfileSetupPage({super.key});
 
   @override
   State<CompanyProfileSetupPage> createState() => _CompanyProfileSetupPageState();
@@ -60,7 +58,7 @@ class _CompanyProfileSetupPageState extends State<CompanyProfileSetupPage> {
 
   final CityService _cityService = CityService();
   bool _acceptedTerms = false;
-  List<String> _cities = [];
+  final List<String> _cities = [];
 
   @override
   void initState() {
@@ -170,7 +168,7 @@ class _CompanyProfileSetupPageState extends State<CompanyProfileSetupPage> {
   }
 
   Widget _buildIndustryDropdown() {
-    return Container(
+    return SizedBox(
       height: 60,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -249,7 +247,7 @@ class _CompanyProfileSetupPageState extends State<CompanyProfileSetupPage> {
   }
 
   Widget _buildDocumentsUpload() {
-    return Container(
+    return SizedBox(
       height: 114,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -368,7 +366,7 @@ class _CompanyProfileSetupPageState extends State<CompanyProfileSetupPage> {
                     value: industry,
                     child: Text(industry),
                   )).toList(),
-                  onChanged: (value) => setState(() => _selectedIndustry = value as String?),
+                  onChanged: (value) => setState(() => _selectedIndustry = value),
                   validator: (value) => value == null ? 'هذا الحقل مطلوب' : null,
                 ),
                 const SizedBox(height: 16),
@@ -379,7 +377,7 @@ class _CompanyProfileSetupPageState extends State<CompanyProfileSetupPage> {
                     value: size,
                     child: Text(size),
                   )).toList(),
-                  onChanged: (value) => setState(() => _selectedSize = value as String?),
+                  onChanged: (value) => setState(() => _selectedSize = value),
                   validator: (value) => value == null ? 'هذا الحقل مطلوب' : null,
                 ),
                 const SizedBox(height: 16),
