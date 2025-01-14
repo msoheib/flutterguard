@@ -66,76 +66,32 @@ class _JobDetailPageState extends State<JobDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFB),
-      body: Column(
-        children: [
-          const CustomAppBar(
-            title: 'تفاصيل الوظيفة',
-          ),
-          Expanded(
-            child: StreamBuilder<JobPost?>(
-              stream: _jobService.getJobStream(widget.jobId),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(child: Text('حدث خطأ: ${snapshot.error}'));
-                }
+      backgroundColor: const Color(0xFFF6F7F8),
+      appBar: CustomAppBar(title: 'تفاصيل الوظيفة'),
+      body: StreamBuilder<JobPost?>(
+        stream: _jobService.getJobStream(widget.jobId),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
 
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+          if (!snapshot.hasData || snapshot.data == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                final job = snapshot.data!;
+          final job = snapshot.data!;
 
-                return Stack(
-                  children: [
-                    // Your existing job details content
-                    SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(job.title),
-                          Text(job.company),
-                          // ... rest of your job details
-                        ],
-                      ),
-                    ),
-
-                    // Bottom Apply Button
-                    Positioned(
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                      child: ElevatedButton(
-                        onPressed: _hasApplied || _isLoading
-                            ? null 
-                            : () => _applyForJob(job),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4CA6A8),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : Text(
-                                _hasApplied ? 'تم التقديم' : 'تقديم طلب',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontFamily: 'Cairo',
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ],
-                );
-              },
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _buildJobHeader(job),
+                const SizedBox(height: 16),
+                _buildJobDetailsSection(job),
+              ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -234,5 +190,99 @@ class _JobDetailPageState extends State<JobDetailPage> {
     } else {
       return '${difference.inMinutes} دقيقة';
     }
+  }
+
+  Widget _buildJobHeader(JobPost job) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: ShapeDecoration(
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Company Logo and Name
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                job.company,
+                style: const TextStyle(
+                  color: Color(0xFF6A6A6A),
+                  fontSize: 12,
+                  fontFamily: 'Cairo',
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 33,
+                height: 33,
+                decoration: const ShapeDecoration(
+                  color: Color(0xFFF3F3F3),
+                  shape: OvalBorder(),
+                ),
+                child: job.companyLogo != null 
+                  ? ClipOval(child: Image.network(job.companyLogo!))
+                  : null,
+              ),
+            ],
+          ),
+          // ... rest of the header
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJobDetailsSection(JobPost job) {
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          decoration: ShapeDecoration(
+            color: const Color(0xFFF8F8F9),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          child: const Text(
+            'تفاصيل الوظيفة',
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              color: Color(0xFF1A1D1E),
+              fontSize: 14,
+              fontFamily: 'Cairo',
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                job.description,
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  color: Color(0xFF6A6A6A),
+                  fontSize: 12,
+                  fontFamily: 'Cairo',
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 } 

@@ -141,12 +141,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     final filters = {
       'salaryMin': salaryRange.start.toInt(),
       'salaryMax': salaryRange.end.toInt(),
-      'location': _selectedLocation,
+      'location': _selectedLocation != null ? {'city': _selectedLocation} : null,
       'title': _jobTitleController.text,
       'skills': _selectedSkills,
     };
-
-    print('Applying filters before cleanup: $filters'); // Debug log
 
     // Remove null values
     filters.removeWhere((key, value) => 
@@ -155,7 +153,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       (value is List && value.isEmpty)
     );
 
-    print('Applying filters after cleanup: $filters'); // Debug log
+    print('Applying filters after cleanup: $filters');
     Navigator.pop(context, filters);
   }
 

@@ -67,67 +67,32 @@ class JobService {
   }
 
   // Additional methods
-  Stream<List<JobPost>> getJobPosts({Map<String, dynamic>? filters}) async* {
-    print('Getting job posts with filters: $filters');
+  Stream<List<JobPost>> getJobPosts({Map<String, dynamic>? filters}) {
+    Query query = _firestore.collection('jobs');
     
-    try {
-      var query = _firestore.collection('jobs')
-          .where('status', isEqualTo: 'active');
-
-      if (filters != null) {
-        // Get all jobs and filter in memory for both salary and location
-        yield* query.snapshots().map((snapshot) {
-          var jobs = snapshot.docs.map((doc) => JobPost.fromFirestore(doc)).toList();
-          
-          // Apply salary filter
-          final salaryMin = filters['salaryMin'];
-          final salaryMax = filters['salaryMax'];
-          if (salaryMin != null || salaryMax != null) {
-            jobs = jobs.where((job) {
-              // Debug log
-              print('Job salary data: ${job.salary}');
-              
-              final amount = job.salary['amount'];
-              if (amount == null) return false;
-              
-              final jobSalary = double.tryParse(amount.toString()) ?? 0;
-              final min = salaryMin?.toDouble() ?? 0;
-              final max = salaryMax?.toDouble() ?? double.infinity;
-              return jobSalary >= min && jobSalary <= max;
-            }).toList();
-          }
-
-          // Apply location filter
-          final location = filters['location'];
-          if (location != null && location.toString().isNotEmpty) {
-            jobs = jobs.where((job) {
-              final jobLocation = job.location;
-              // Debug log
-              print('Job location data: $jobLocation');
-              
-              if (jobLocation is String) {
-                return jobLocation == location;
-              } else {
-                Map<String, dynamic> locationMap = Map<String, dynamic>.from(location);
-                return locationMap['city'] == location || locationMap['address'] == location;
-              }
-            }).toList();
-          }
-          
-          print('Found ${jobs.length} jobs after all filtering');
-          return jobs;
-        });
-      } else {
-        // If no filters, return all active jobs
-        yield* query.snapshots().map((snapshot) => 
-          snapshot.docs.map((doc) => JobPost.fromFirestore(doc)).toList()
-        );
+    if (filters != null) {
+      if (filters['location'] != null && filters['location'] is Map<String, dynamic>) {
+        final locationFilter = filters['location'] as Map<String, dynamic>;
+        if (locationFilter['city'] != null && locationFilter['city'].toString().isNotEmpty) {
+          query = query.where('location.city', isEqualTo: locationFilter['city']);
+        }
       }
-    } catch (e, stackTrace) {
-      print('Error in getJobPosts: $e');
-      print('Stack trace: $stackTrace');
-      yield [];
+      if (filters['title'] != null && filters['title'].toString().isNotEmpty) {
+        query = query.where('title', isGreaterThanOrEqualTo: filters['title'])
+                    .where('title', isLessThanOrEqualTo: filters['title'] + '\uf8ff');
+      }
+      if (filters['skills'] != null && (filters['skills'] as List).isNotEmpty) {
+        query = query.where('skills', arrayContainsAny: filters['skills']);
+      }
+      if (filters['salaryMin'] != null && filters['salaryMax'] != null) {
+        query = query.where('salary.amount', isGreaterThanOrEqualTo: filters['salaryMin'])
+                    .where('salary.amount', isLessThanOrEqualTo: filters['salaryMax']);
+      }
     }
+
+    return query.snapshots().map((snapshot) =>
+      snapshot.docs.map((doc) => JobPost.fromFirestore(doc)).toList()
+    );
   }
 
   Stream<List<JobProfile>> getJobProfiles() {
