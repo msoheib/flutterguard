@@ -1,38 +1,95 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Application {
+  static const String STATUS_PENDING = 'pending';
+  static const String STATUS_ACCEPTED = 'accepted';
+  static const String STATUS_REJECTED = 'rejected';
+
   final String id;
+  final String userId;
   final String jobId;
-  final String jobseekerId;
   final String companyId;
   final String status;
-  final DateTime appliedAt;
-  final DateTime updatedAt;
+  final DateTime appliedDate;
+  final DateTime? updatedAt;
+  final String jobTitle;
+  final String companyName;
+  final String? companyLogo;
+  final String location;
+  final Map<String, dynamic> locationMap;
+  final double salary;
+  final Map<String, dynamic> salaryMap;
+  final String jobType;
+  final String workType;
+  final String jobSeekerName;
   final String? coverLetter;
   final List<String>? attachments;
 
   Application({
     required this.id,
+    required this.userId,
     required this.jobId,
-    required this.jobseekerId,
     required this.companyId,
     required this.status,
-    required this.appliedAt,
-    required this.updatedAt,
+    required this.appliedDate,
+    this.updatedAt,
+    required this.jobTitle,
+    required this.companyName,
+    this.companyLogo,
+    required this.location,
+    required this.locationMap,
+    required this.salary,
+    required this.salaryMap,
+    required this.jobType,
+    required this.workType,
+    required this.jobSeekerName,
     this.coverLetter,
     this.attachments,
   });
 
-  factory Application.fromFirestore(DocumentSnapshot doc) {
+  Map<String, dynamic> toMap() {
+    return {
+      'userId': userId,
+      'jobId': jobId,
+      'companyId': companyId,
+      'status': status,
+      'appliedDate': Timestamp.fromDate(appliedDate),
+      'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
+      'jobTitle': jobTitle,
+      'companyName': companyName,
+      'companyLogo': companyLogo,
+      'location': location,
+      'locationMap': locationMap,
+      'salary': salary,
+      'salaryMap': salaryMap,
+      'jobType': jobType,
+      'workType': workType,
+      'jobSeekerName': jobSeekerName,
+      'coverLetter': coverLetter,
+      'attachments': attachments,
+    };
+  }
+
+  static Application fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return Application(
       id: doc.id,
-      jobId: data['jobId'],
-      jobseekerId: data['jobseekerId'],
-      companyId: data['companyId'],
-      status: data['status'],
-      appliedAt: (data['appliedAt'] as Timestamp).toDate(),
-      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      userId: data['userId'] ?? '',
+      jobId: data['jobId'] ?? '',
+      companyId: data['companyId'] ?? '',
+      status: data['status'] ?? STATUS_PENDING,
+      appliedDate: (data['appliedDate'] as Timestamp).toDate(),
+      updatedAt: data['updatedAt'] != null ? (data['updatedAt'] as Timestamp).toDate() : null,
+      jobTitle: data['jobTitle'] ?? '',
+      companyName: data['companyName'] ?? '',
+      companyLogo: data['companyLogo'],
+      location: data['location'] ?? '',
+      locationMap: Map<String, dynamic>.from(data['locationMap'] ?? {}),
+      salary: (data['salary'] ?? 0).toDouble(),
+      salaryMap: Map<String, dynamic>.from(data['salaryMap'] ?? {}),
+      jobType: data['jobType'] ?? '',
+      workType: data['workType'] ?? '',
+      jobSeekerName: data['jobSeekerName'] ?? '',
       coverLetter: data['coverLetter'],
       attachments: data['attachments'] != null ? List<String>.from(data['attachments']) : null,
     );

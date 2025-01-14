@@ -26,7 +26,7 @@ class AuthGuard {
         .doc(user.uid)
         .get();
     
-    if (userDoc.data()?['role'] != 'company') {
+    if (userDoc.data()?['role'] != "company") {
       NavigationService.navigateTo('/home');
       return false;
     }

@@ -1,52 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/job_application.dart';
+import '../models/application.dart';
 import '../models/job_post.dart';
 
 class JobApplicationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Get applications for the current user (job seeker)
-  Future<List<JobApplication>> getUserApplications() async {
-    final userId = _auth.currentUser?.uid;
-    if (userId == null) return [];
-
-    final snapshot = await _firestore
-        .collection('applications')
-        .where('userId', isEqualTo: userId)
-        .orderBy('appliedAt', descending: true)
-        .get();
-
-    return snapshot.docs.map((doc) => JobApplication.fromFirestore(doc)).toList();
-  }
-
-  // Get recent applications for a company
-  Stream<List<JobApplication>> getCompanyApplications() {
-    final userId = _auth.currentUser?.uid;
-    if (userId == null) return Stream.value([]);
-
-    return _firestore
-        .collection('applications')
-        .where('companyId', isEqualTo: userId)
-        .orderBy('appliedAt', descending: true)
-        .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => JobApplication.fromFirestore(doc)).toList());
-  }
-
-  // Get applications for a specific job
-  Stream<List<JobApplication>> getJobApplications(String jobId) {
-    return _firestore
-        .collection('applications')
-        .where('jobId', isEqualTo: jobId)
-        .orderBy('appliedAt', descending: true)
-        .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => JobApplication.fromFirestore(doc)).toList());
-  }
-
-  // Apply for a job (for job seekers)
   Future<void> applyForJob(JobPost job, String jobSeekerName) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
@@ -54,7 +14,7 @@ class JobApplicationService {
     // Check if user has already applied
     final existingApplication = await _firestore
         .collection('applications')
-        .where('jobId', isEqualTo: job.id ?? '')
+        .where('jobId', isEqualTo: job.id)
         .where('userId', isEqualTo: userId)
         .get();
 
@@ -62,61 +22,70 @@ class JobApplicationService {
       throw Exception('You have already applied for this job');
     }
 
-    // Create new application
-    final application = JobApplication(
-      id: '', // Will be set by Firestore
-      userId: userId,
-      status: JobApplication.STATUS_PENDING,
-      appliedAt: DateTime.now(),
-      coverLetter: null,
-      attachments: null,
+    final batch = _firestore.batch();
+    final applicationRef = _firestore.collection('applications').doc();
+
+    final application = Application(
+      id: applicationRef.id,
       jobId: job.id,
-      jobTitle: job.title,
+      userId: userId,
       companyId: job.companyId,
+      status: Application.STATUS_PENDING,
+      appliedDate: DateTime.now(),
+      updatedAt: DateTime.now(),
+      jobTitle: job.title,
       companyName: job.companyName,
+      location: job.location['city'] ?? '',
+      locationMap: job.location,
+      salary: (job.salary['amount'] ?? 0).toDouble(),
+      salaryMap: job.salary,
+      jobType: job.type,
+      workType: job.workType,
+      jobSeekerName: jobSeekerName,
     );
 
-    // First create the application document
-    final applicationRef = await _firestore.collection('applications').add(application.toMap());
+    batch.set(applicationRef, application.toMap());
 
-    // Update job applications count and add application to job's applications map
-    await _firestore.collection('jobs').doc(job.id).update({
-      'applicationsCount': FieldValue.increment(1),
-      'applications.${applicationRef.id}': application.toMap(),
+    // Update job document
+    final jobRef = _firestore.collection('jobs').doc(job.id);
+    batch.update(jobRef, {
+      'totalApplications': FieldValue.increment(1),
+      'updatedAt': FieldValue.serverTimestamp(),
     });
+
+    // Update user's application count
+    final userRef = _firestore.collection('users').doc(userId);
+    batch.update(userRef, {
+      'applicationCount': FieldValue.increment(1),
+      'lastUpdated': FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
   }
 
-  // Update application status (for companies)
-  Future<void> updateApplicationStatus(String applicationId, String status) async {
+  Stream<List<Application>> getUserApplications() {
     final userId = _auth.currentUser?.uid;
-    if (userId == null) throw Exception('User not authenticated');
-
-    await _firestore.collection('applications').doc(applicationId).update({
-      'status': status,
-      'reviewedAt': FieldValue.serverTimestamp(),
-    });
-  }
-
-  // Mark application as read (for companies)
-  Future<void> markAsRead(String applicationId) async {
-    final userId = _auth.currentUser?.uid;
-    if (userId == null) throw Exception('User not authenticated');
-
-    await _firestore.collection('applications').doc(applicationId).update({
-      'isRead': true,
-    });
-  }
-
-  // Get unread applications count (for companies)
-  Stream<int> getUnreadApplicationsCount() {
-    final userId = _auth.currentUser?.uid;
-    if (userId == null) return Stream.value(0);
+    if (userId == null) return Stream.value([]);
 
     return _firestore
         .collection('applications')
-        .where('companyId', isEqualTo: userId)
-        .where('isRead', isEqualTo: false)
+        .where('userId', isEqualTo: userId)
+        .orderBy('appliedDate', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+        .map((snapshot) => 
+            snapshot.docs.map((doc) => Application.fromFirestore(doc)).toList());
+  }
+
+  Future<bool> hasApplied(String jobId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return false;
+
+    final snapshot = await _firestore
+        .collection('applications')
+        .where('jobId', isEqualTo: jobId)
+        .where('userId', isEqualTo: userId)
+        .get();
+
+    return snapshot.docs.isNotEmpty;
   }
 } 

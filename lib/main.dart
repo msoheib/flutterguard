@@ -19,6 +19,7 @@ import 'screens/create_job_page.dart';
 import 'pages/company/company_settings_page.dart';
 import 'pages/superadmin_page.dart';
 import 'theme/app_theme.dart';
+import 'screens/application_success_page.dart';
 
 Future<void> main() async {
   try {
@@ -111,7 +112,6 @@ class MyApp extends StatelessWidget {
           primary: AppTheme.primary,
           secondary: AppTheme.secondary,
           error: AppTheme.error,
-          background: AppTheme.background,
           surface: AppTheme.surface,
         ),
         
@@ -228,6 +228,9 @@ class MyApp extends StatelessWidget {
           jobId: ModalRoute.of(context)!.settings.arguments as String,
         ),
         '/superadmin': (context) => const SuperAdminPage(),
+        '/home': (context) => const JobSeekerHomePage(),  // For job seekers
+        '/company/home': (context) => const CompanyHomePage(),  // For companies
+        '/application-success': (context) => const ApplicationSuccessPage(),
       },
     );
   }

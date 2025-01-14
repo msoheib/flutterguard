@@ -6,6 +6,8 @@ import '../pages/applications_history_page.dart';
 import '../pages/chat_page.dart';
 import '../pages/settings_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../widgets/user_route_wrapper.dart';
+import '../services/application_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,49 +17,18 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
+  final int _selectedIndex = 0;
   final user = FirebaseAuth.instance.currentUser;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: [
-          _buildJobsPage(),
-          const ApplicationsHistoryPage(),
-          const ChatPage(),
-          const SettingsPage(),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF4CA6A8),
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.work),
-            label: 'الوظائف',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'التقديمات',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'المحادثات',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'الإعدادات',
-          ),
-        ],
+    return UserRouteWrapper(
+      currentIndex: 0,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFFBFBFB),
+        body: SafeArea(
+          child: _buildJobsPage(),
+        ),
       ),
     );
   }
@@ -79,11 +50,8 @@ class _HomePageState extends State<HomePage> {
               color: const Color(0xFF4CA6A8),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('job_applications')
-                  .where('userId', isEqualTo: user?.uid)
-                  .snapshots(),
+            child: StreamBuilder<List<Application>>(
+              stream: ApplicationService().getUserApplications(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return const Text('حدث خطأ');
@@ -93,7 +61,7 @@ class _HomePageState extends State<HomePage> {
                   return const CircularProgressIndicator();
                 }
 
-                final applications = snapshot.data?.docs.length ?? 0;
+                final applications = snapshot.data?.length ?? 0;
 
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -103,12 +71,11 @@ class _HomePageState extends State<HomePage> {
                       color: Colors.white,
                     ),
                     Text(
-                      'لقد تقدمت إلى $applications وظائف',
+                      'التقديمات: $applications',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
-                        fontFamily: 'Cairo',
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],

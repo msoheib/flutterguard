@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/recyclers/company_navbar.dart';
+import '../models/application.dart';
 
 class JobApplicantsPage extends StatefulWidget {
   final String jobId;
@@ -135,155 +133,52 @@ class _JobApplicantsPageState extends State<JobApplicantsPage> {
     );
   }
 
-  Widget _buildApplicantCard(Map<String, dynamic> applicant) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: ShapeDecoration(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        shadows: const [
-          BoxShadow(
-            color: Color(0x2D99AAC5),
-            blurRadius: 62,
-            offset: Offset(0, 4),
-          )
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: ShapeDecoration(
-                  color: const Color(0xFFF6F7F8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      'منذ ${applicant['timeAgo']}',
-                      style: const TextStyle(
-                        color: Color(0xFF6A6A6A),
-                        fontSize: 10,
-                        fontFamily: 'Cairo',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    const Icon(Icons.access_time, size: 10, color: Color(0xFF6A6A6A)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        applicant['name'],
-                        style: const TextStyle(
-                          color: Color(0xFF1A1D1E),
-                          fontSize: 14,
-                          fontFamily: 'Cairo',
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 33,
-                        height: 33,
-                        decoration: const ShapeDecoration(
-                          color: Color(0xFFF3F3F3),
-                          shape: OvalBorder(),
-                        ),
-                        child: applicant['photoUrl'] != null
-                            ? ClipOval(
-                                child: Image.network(
-                                  applicant['photoUrl'],
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            : const Icon(Icons.person, color: Color(0xFF6A6A6A)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    applicant['jobTitle'],
-                    style: const TextStyle(
-                      color: Color(0xFF6A6A6A),
-                      fontSize: 12,
-                      fontFamily: 'Cairo',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              TextButton(
-                onPressed: () {
-                  // Implement message functionality
-                },
-                style: TextButton.styleFrom(
-                  backgroundColor: const Color(0xFFF3F3F3),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-                child: const Text(
-                  'مراسلة',
-                  style: TextStyle(
-                    color: Color(0xFF4CA6A8),
-                    fontSize: 14,
-                    fontFamily: 'Cairo',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  // Implement CV view functionality
-                },
-                style: TextButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CA6A8),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-                child: const Text(
-                  'السيرة الذاتية',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontFamily: 'Cairo',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+  Widget _buildApplicantsList() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('applications')
+          .where('jobId', isEqualTo: widget.jobId)
+          .orderBy('appliedDate', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final applications = snapshot.data!.docs
+            .map((doc) => Application.fromFirestore(doc))
+            .where((application) => 
+              _searchQuery.isEmpty || 
+              application.userId.toLowerCase().contains(_searchQuery.toLowerCase()))
+            .toList();
+
+        if (applications.isEmpty) {
+          return const Center(child: Text('لا يوجد متقدمين'));
+        }
+
+        return ListView.builder(
+          itemCount: applications.length,
+          itemBuilder: (context, index) {
+            final application = applications[index];
+            return _buildApplicantCard(application);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildApplicantCard(Application application) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ListTile(
+        title: Text(application.userId), // You might want to fetch user details
+        subtitle: Text('Applied: ${application.appliedDate.toString()}'),
+        trailing: Text(application.status),
+        onTap: () => _showApplicationDetails(application),
       ),
     );
   }
@@ -301,59 +196,7 @@ class _JobApplicantsPageState extends State<JobApplicantsPage> {
             _buildSearchBar(),
             const SizedBox(height: 24),
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('applications')
-                    .where('jobId', isEqualTo: widget.jobId)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
-
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final applications = snapshot.data!.docs;
-                  
-                  if (applications.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'لا يوجد متقدمين حتى الآن',
-                        style: TextStyle(
-                          color: Color(0xFF6A6A6A),
-                          fontSize: 16,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    itemCount: applications.length,
-                    itemBuilder: (context, index) {
-                      final application = applications[index].data() as Map<String, dynamic>;
-                      
-                      // Filter based on search query
-                      if (_searchQuery.isNotEmpty &&
-                          !application['applicantName']
-                              .toString()
-                              .toLowerCase()
-                              .contains(_searchQuery.toLowerCase())) {
-                        return const SizedBox.shrink();
-                      }
-
-                      return _buildApplicantCard({
-                        'name': application['applicantName'],
-                        'photoUrl': application['applicantPhotoUrl'],
-                        'jobTitle': application['jobTitle'],
-                        'timeAgo': _getTimeAgo(application['appliedAt']),
-                      });
-                    },
-                  );
-                },
-              ),
+              child: _buildApplicantsList(),
             ),
           ],
         ),

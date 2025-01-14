@@ -457,7 +457,7 @@ class _CompanyProfileSetupPageState extends State<CompanyProfileSetupPage> {
                     ),
                   ),
                   child: TextButton(
-                    onPressed: _submitForm,
+                    onPressed: _saveProfile,
                     child: const Text(
                       'التقديم',
                       style: TextStyle(
@@ -478,51 +478,53 @@ class _CompanyProfileSetupPageState extends State<CompanyProfileSetupPage> {
     );
   }
 
-  Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('No authenticated user found');
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
+        'isProfileComplete': true,
+        'profile.companyInfo': {
+          'name': _nameController.text,
+          'description': _descriptionController.text,
+          'website': _websiteController.text,
+          'industry': _selectedIndustry,
+          'size': _selectedSize,
+          'foundedYear': _establishedYearController.text,
+          'registrationNumber': _registrationNumberController.text,
+          'address': {
+            'street': _streetController.text,
+            'building': _buildingController.text,
+            'city': _selectedCity,
+            'postalCode': _postalCodeController.text,
+          },
+        },
       });
 
-      try {
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-            'companyInfo': {
-              'name': _nameController.text,
-              'description': _descriptionController.text,
-              'industry': _selectedIndustry,
-              'size': _selectedSize,
-              'website': _websiteController.text,
-              'establishedYear': _establishedYearController.text,
-              'registrationNumber': _registrationNumberController.text,
-              'address': {
-                'city': _selectedCity,
-                'street': _streetController.text,
-                'building': _buildingController.text,
-                'postalCode': _postalCodeController.text,
-              },
-            },
-            'isProfileComplete': true,
-            'lastUpdated': FieldValue.serverTimestamp(),
-          });
-
-          if (mounted) {
-            Navigator.pushReplacementNamed(context, '/home');
-          }
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error updating profile: $e')),
-          );
-        }
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/company/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving profile: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }

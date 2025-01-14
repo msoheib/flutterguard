@@ -20,15 +20,15 @@ class NavigationService {
   static final Map<String, Widget Function(BuildContext)> companyRoutes = {
     companyHome: (context) => const CompanyHomePage(),
     companyChat: (context) => CompanyRouteWrapper(
-          currentIndex: 2,
+          currentIndex: 1,
           child: const ChatPage(),
         ),
     companyApplications: (context) => CompanyRouteWrapper(
-          currentIndex: 1,
+          currentIndex: 2,
           child: const CompanyApplicantsPage(),
         ),
     companySettings: (context) => CompanyRouteWrapper(
-          currentIndex: 0,
+          currentIndex: 3,
           child: const CompanySettingsPage(),
         ),
     createJob: (context) => const CreateJobPage(),

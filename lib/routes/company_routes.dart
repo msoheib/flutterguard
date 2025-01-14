@@ -16,5 +16,5 @@ class CompanyRoutes {
 Navigator.pushReplacementNamed(
   context,
   CompanyRoutes.applicantsWithId('job_123'),
-  arguments: {'jobId': 'job_123'},
+  arguments = {'jobId': 'job_123'},
 ); 

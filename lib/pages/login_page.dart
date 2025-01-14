@@ -3,7 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/custom_button.dart';
 import 'otp_verification_page.dart';
-import '../widgets/auth_wrapper.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -43,6 +43,17 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       String phoneNumber = _phoneController.text;
+      // Get user type from Firestore based on phone number
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .where('phoneNumber', isEqualTo: '+966$phoneNumber')
+          .get();
+
+      String userType = 'jobseeker'; // default
+      if (userDoc.docs.isNotEmpty) {
+        userType = userDoc.docs.first.data()['role'] as String;
+      }
+
       phoneNumber = phoneNumber.replaceAll(RegExp(r'[\s-]'), '');
       
       if (phoneNumber.startsWith('0')) {
@@ -58,11 +69,7 @@ class _LoginPageState extends State<LoginPage> {
         verificationCompleted: (PhoneAuthCredential credential) async {
           await FirebaseAuth.instance.signInWithCredential(credential);
           if (mounted) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const AuthWrapper()),
-              (route) => false,
-            );
+            Navigator.pushReplacementNamed(context, '/home');
           }
         },
         verificationFailed: (FirebaseAuthException e) {
@@ -83,6 +90,7 @@ class _LoginPageState extends State<LoginPage> {
               builder: (context) => OTPVerificationPage(
                 verificationId: verificationId,
                 phoneNumber: phoneNumber,
+                userType: userType,  // Pass the user type
               ),
             ),
           );

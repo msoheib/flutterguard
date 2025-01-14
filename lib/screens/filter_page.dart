@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../services/city_service.dart';
 
 class FilterBottomSheet extends StatefulWidget {
   const FilterBottomSheet({super.key});
@@ -9,7 +10,13 @@ class FilterBottomSheet extends StatefulWidget {
 }
 
 class _FilterBottomSheetState extends State<FilterBottomSheet> {
-  final List<String> selectedSkills = [];
+  final TextEditingController _minSalaryController = TextEditingController();
+  final TextEditingController _maxSalaryController = TextEditingController();
+  final TextEditingController _jobTitleController = TextEditingController();
+  
+  String? _selectedLocation;
+  List<String> _selectedSkills = [];
+
   final List<String> skills = [
     'حارس أمن',
     'تقييم الثغرات',
@@ -29,6 +36,37 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
 
   // Region options
   final List<String> regions = ['الرياض', 'جدة', 'الدمام', 'مكة', 'المدينة'];
+
+  final CityService _cityService = CityService();
+  List<String> _cities = [];
+  bool _isLoadingCities = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCities();
+  }
+
+  Future<void> _loadCities() async {
+    try {
+      await _cityService.initializeCities();
+      _cityService.getCities().listen((cities) {
+        if (mounted) {
+          setState(() {
+            _cities = cities;
+            _isLoadingCities = false;
+          });
+        }
+      });
+    } catch (e) {
+      print('Error loading cities: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingCities = false;
+        });
+      }
+    }
+  }
 
   Future<void> _selectDateRange() async {
     final DateTimeRange? picked = await showDateRangePicker(
@@ -100,28 +138,33 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   }
 
   void _applyFilters() {
-    print('Creating filters with:');
-    print('  Category: $selectedCategory');
-    print('  Region: $selectedRegion');
-    print('  Salary Range: $salaryRange');
-    print('  Date Range: $selectedDateRange');
-    print('  Skills: $selectedSkills');
-
     final filters = {
-      'category': selectedCategory,
-      'dateRange': selectedDateRange != null ? {
-        'start': selectedDateRange!.start,
-        'end': selectedDateRange!.end,
-      } : null,
-      'salaryRange': {
-        'min': salaryRange.start,
-        'max': salaryRange.end,
-      },
-      'region': selectedRegion,
-      'skills': selectedSkills,
+      'salaryMin': salaryRange.start.toInt(),
+      'salaryMax': salaryRange.end.toInt(),
+      'location': _selectedLocation,
+      'title': _jobTitleController.text,
+      'skills': _selectedSkills,
     };
-    print('Final filters object: $filters');
+
+    print('Applying filters before cleanup: $filters'); // Debug log
+
+    // Remove null values
+    filters.removeWhere((key, value) => 
+      value == null || 
+      (value is String && value.isEmpty) || 
+      (value is List && value.isEmpty)
+    );
+
+    print('Applying filters after cleanup: $filters'); // Debug log
     Navigator.pop(context, filters);
+  }
+
+  @override
+  void dispose() {
+    _minSalaryController.dispose();
+    _maxSalaryController.dispose();
+    _jobTitleController.dispose();
+    super.dispose();
   }
 
   @override
@@ -306,37 +349,51 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                       Expanded(
                         child: _buildFilterSection(
                           'المنطقة',
-                          InkWell(
-                            onTap: _showRegionPicker,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 18),
-                              decoration: ShapeDecoration(
-                                color: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    selectedRegion.isEmpty ? 'اختر المنطقة' : selectedRegion,
-                                    style: TextStyle(
-                                      color: selectedRegion.isEmpty ? const Color(0xFF6A6A6A) : Colors.black,
-                                      fontSize: 14,
-                                      fontFamily: 'Cairo',
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  SvgPicture.asset(
-                                    'assets/media/icons/location.svg',
-                                    width: 20,
-                                    height: 20,
-                                  ),
-                                ],
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: ShapeDecoration(
+                              color: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
+                            child: _isLoadingCities
+                                ? const Center(child: CircularProgressIndicator())
+                                : DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: selectedRegion.isEmpty ? null : selectedRegion,
+                                      hint: const Text(
+                                        'اختر المدينة',
+                                        style: TextStyle(
+                                          color: Color(0xFF6A6A6A),
+                                          fontSize: 14,
+                                          fontFamily: 'Cairo',
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                      isExpanded: true,
+                                      items: _cities.map((String city) {
+                                        return DropdownMenuItem<String>(
+                                          value: city,
+                                          child: Text(
+                                            city,
+                                            style: const TextStyle(
+                                              color: Color(0xFF6A6A6A),
+                                              fontSize: 14,
+                                              fontFamily: 'Cairo',
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChanged: (String? newValue) {
+                                        setState(() {
+                                          selectedRegion = newValue ?? '';
+                                          _selectedLocation = newValue;
+                                        });
+                                      },
+                                    ),
+                                  ),
                           ),
                         ),
                       ),
@@ -423,14 +480,14 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   }
 
   Widget _buildSkillChip(String skill) {
-    final bool isSelected = selectedSkills.contains(skill);
+    final bool isSelected = _selectedSkills.contains(skill);
     return GestureDetector(
       onTap: () {
         setState(() {
           if (isSelected) {
-            selectedSkills.remove(skill);
+            _selectedSkills.remove(skill);
           } else {
-            selectedSkills.add(skill);
+            _selectedSkills.add(skill);
           }
         });
       },

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import '../widgets/authenticated_layout.dart';
+import '../widgets/user_route_wrapper.dart';
 
 class ChatPage extends StatelessWidget {
   const ChatPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AuthenticatedLayout(
+    return UserRouteWrapper(
       currentIndex: 2,
-      child: Container(
-        color: const Color(0xFFFBFBFB),
-        child: SafeArea(
+      child: Scaffold(
+        backgroundColor: const Color(0xFFFBFBFB),
+        body: SafeArea(
           child: Column(
             children: [
               // Header

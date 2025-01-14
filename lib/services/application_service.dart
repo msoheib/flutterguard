@@ -1,78 +1,77 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../models/application.dart';
+import '../models/job_post.dart';
 
 class ApplicationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Apply for a job
   Future<void> applyForJob({
     required String jobId,
     required String companyId,
     String? coverLetter,
     List<String>? attachments,
   }) async {
-    final userId = _auth.currentUser?.uid;
-    if (userId == null) throw Exception('User not authenticated');
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
 
-    final application = {
-      'jobId': jobId,
-      'jobseekerId': userId,
-      'companyId': companyId,
-      'status': 'pending',
-      'appliedAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-      if (coverLetter != null) 'coverLetter': coverLetter,
-      if (attachments != null) 'attachments': attachments,
-    };
+    try {
+      final jobDoc = await _firestore.collection('jobs').doc(jobId).get();
+      if (!jobDoc.exists) throw Exception('Job not found');
+      
+      final jobData = jobDoc.data()!;
+      
+      // Handle location map
+      Map<String, dynamic> locationMap;
+      if (jobData['location'] is String) {
+        locationMap = {
+          'city': jobData['location'],
+          'address': jobData['location']
+        };
+      } else {
+        locationMap = Map<String, dynamic>.from(jobData['location'] ?? {});
+      }
 
-    // Start a batch write
-    final batch = _firestore.batch();
+      // Handle salary map
+      Map<String, dynamic> salaryMap;
+      if (jobData['salary'] is num) {
+        salaryMap = {
+          'amount': jobData['salary'],
+          'currency': 'SAR'
+        };
+      } else {
+        salaryMap = Map<String, dynamic>.from(jobData['salary'] ?? {});
+      }
 
-    // Create the application
-    final applicationRef = _firestore.collection('applications').doc();
-    batch.set(applicationRef, application);
+      final application = Application(
+        id: '',
+        userId: user.uid,
+        jobId: jobId,
+        companyId: companyId,
+        status: Application.STATUS_PENDING,
+        appliedDate: DateTime.now(),
+        updatedAt: DateTime.now(),
+        jobTitle: jobData['title'] ?? '',
+        companyName: jobData['companyName'] ?? '',
+        location: jobData['location'] ?? '',
+        locationMap: locationMap,
+        salary: (jobData['salary'] ?? 0).toDouble(),
+        salaryMap: salaryMap,
+        jobType: jobData['type'] ?? '',
+        workType: jobData['workType'] ?? '',
+        jobSeekerName: user.displayName ?? '',
+        coverLetter: coverLetter,
+        attachments: attachments,
+      );
 
-    // Increment the applications counter on the job
-    final jobRef = _firestore.collection('jobs').doc(jobId);
-    batch.update(jobRef, {
-      'applicationsCount': FieldValue.increment(1),
-    });
-
-    // Commit the batch
-    await batch.commit();
+      await _firestore.collection('applications').add(application.toMap());
+    } catch (e) {
+      print('Error in applyForJob: $e');
+      rethrow;
+    }
   }
 
-  // Get applications for a jobseeker
-  Stream<QuerySnapshot> getJobseekerApplications() {
-    final userId = _auth.currentUser?.uid;
-    if (userId == null) throw Exception('User not authenticated');
-
-    return _firestore
-        .collection('applications')
-        .where('jobseekerId', isEqualTo: userId)
-        .orderBy('appliedAt', descending: true)
-        .snapshots();
-  }
-
-  // Get applications for a company's job
-  Stream<QuerySnapshot> getJobApplications(String jobId) {
-    return _firestore
-        .collection('applications')
-        .where('jobId', isEqualTo: jobId)
-        .orderBy('appliedAt', descending: true)
-        .snapshots();
-  }
-
-  // Update application status (for companies)
-  Future<void> updateApplicationStatus(String applicationId, String status) async {
-    await _firestore.collection('applications').doc(applicationId).update({
-      'status': status,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-  }
-
-  // Check if user has already applied
   Future<bool> hasApplied(String jobId) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
@@ -80,63 +79,65 @@ class ApplicationService {
     final snapshot = await _firestore
         .collection('applications')
         .where('jobId', isEqualTo: jobId)
-        .where('jobseekerId', isEqualTo: userId)
+        .where('userId', isEqualTo: userId)
         .limit(1)
         .get();
 
     return snapshot.docs.isNotEmpty;
   }
 
-  // Delete all applications (superadmin only)
-  Future<void> deleteAllApplications() async {
+  Stream<List<Application>> getUserApplications() {
     final userId = _auth.currentUser?.uid;
-    if (userId == null) throw Exception('User not authenticated');
+    if (userId == null) return Stream.value([]);
 
-    // Check if user is superadmin
-    final userDoc = await _firestore.collection('users').doc(userId).get();
-    final userRole = userDoc.data()?['role'] as String?;
-    
-    if (userRole != 'superadmin') {
-      throw Exception('Unauthorized: Only superadmin can perform this action');
-    }
+    return _firestore
+        .collection('applications')
+        .where('userId', isEqualTo: userId)
+        .orderBy('appliedDate', descending: true)
+        .snapshots()
+        .map((snapshot) => 
+            snapshot.docs.map((doc) => Application.fromFirestore(doc)).toList());
+  }
 
+  Future<void> deleteAllApplications() async {
     try {
-      // Get all applications
-      final QuerySnapshot applications = await _firestore.collection('applications').get();
+      final applications = await _firestore.collection('applications').get();
+      final batch = _firestore.batch();
       
-      // Delete each application
       for (var doc in applications.docs) {
-        await doc.reference.delete();
-        print('Deleted application ${doc.id}');
+        batch.delete(doc.reference);
       }
       
-      // Get all jobs to reset their applicationsCount
-      final QuerySnapshot jobs = await _firestore.collection('jobs').get();
-      
-      // Reset applications count and clear applications map for each job
-      for (var doc in jobs.docs) {
-        await doc.reference.update({
-          'applicationsCount': 0,
-          'applications': {},
-        });
-        print('Reset applications for job ${doc.id}');
-      }
-      
-      // Get all users to reset their applicationCount
-      final QuerySnapshot users = await _firestore.collection('users').get();
-      
-      // Reset application count for each user
-      for (var doc in users.docs) {
-        await doc.reference.update({
-          'applicationCount': 0,
-        });
-        print('Reset application count for user ${doc.id}');
-      }
-      
-      print('Successfully deleted all applications data');
+      await batch.commit();
     } catch (e) {
       print('Error deleting applications: $e');
-      throw Exception('Failed to delete applications: $e');
+      rethrow;
     }
+  }
+
+  Future<void> createApplication(JobPost job) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    final application = Application(
+      id: '',  // Will be set by Firestore
+      userId: user.uid,
+      jobId: job.id,
+      companyId: job.companyId,
+      status: Application.STATUS_PENDING,
+      appliedDate: DateTime.now(),
+      updatedAt: DateTime.now(),
+      jobTitle: job.title,
+      companyName: job.companyName,
+      location: job.location['city'] ?? '',
+      locationMap: job.location,
+      salary: (job.salary['amount'] ?? 0).toDouble(),
+      salaryMap: job.salary,
+      jobType: job.type,
+      workType: job.workType,
+      jobSeekerName: user.displayName ?? '',
+    );
+
+    await _firestore.collection('applications').add(application.toMap());
   }
 } 

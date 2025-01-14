@@ -29,8 +29,8 @@ class CompanyBottomNavigation extends StatelessWidget {
 
 // Usage in parent widget:
 CompanyBottomNavigation(
-  currentIndex: 1,
-  onRouteChange: (index) {
+  currentIndex = 1,
+  onRouteChange = (index) {
     // Custom routing logic
     if (index == 1) {
       Navigator.pushNamed(context, '/your/custom/route');

@@ -3,20 +3,17 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/custom_button.dart';
-import '../services/user_service.dart';
-import '../screens/company_profile_setup_page.dart';
-import '../pages/job_seeker_home_page.dart';
 
 class OTPVerificationPage extends StatefulWidget {
   final String verificationId;
   final String phoneNumber;
-  final String? userType;
+  final String userType;
 
   const OTPVerificationPage({
     super.key,
     required this.verificationId,
     required this.phoneNumber,
-    this.userType,
+    required this.userType,
   });
 
   @override
@@ -52,15 +49,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
   }
 
   Future<void> _verifyOTP() async {
-    final otp = _controllers.map((controller) => controller.text).join();
-    
-    if (otp.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter all digits')),
-      );
-      return;
-    }
-
     setState(() {
       _isLoading = true;
     });
@@ -68,90 +56,82 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
     try {
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
         verificationId: widget.verificationId,
-        smsCode: otp,
+        smsCode: _controllers.map((controller) => controller.text).join(),
       );
 
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
       
-      if (userCredential.user != null) {
-        if (widget.userType != null) {
-          await UserService().createNewUser(userCredential.user!, widget.userType!);
-          
-          if (widget.userType == 'company') {
-            final userDoc = await FirebaseFirestore.instance
-                .collection('users')
-                .doc(userCredential.user!.uid)
-                .get();
-            
-            if (!userDoc.exists) {
-              await FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(userCredential.user!.uid)
-                  .set({
-                'phoneNumber': userCredential.user!.phoneNumber,
-                'role': 'jobseeker', // Default role for new users
-                'createdAt': FieldValue.serverTimestamp(),
-                'lastUpdated': FieldValue.serverTimestamp(),
-                'applicationCount': 0,
-                'profile': {
-                  'personalInfo': {
-                    'fullName': '',
-                    'email': '',
-                    'dateOfBirth': null,
-                    'nationality': '',
-                    'city': '',
-                    'profilePicture': '',
-                    'gender': '',
-                    'maritalStatus': '',
-                  },
-                  'aboutMe': {
-                    'description': '',
-                    'title': '',
-                    'summary': '',
-                  },
-                  'workExperience': [],
-                  'education': [],
-                  'skills': [],
-                  'languages': [],
-                  'certificates': [],
-                  'preferences': {
-                    'jobTypes': [],
-                    'expectedSalary': {
-                      'min': 0,
-                      'max': 0,
-                      'currency': 'SAR'
-                    },
-                    'preferredLocations': [],
-                    'willingToTravel': false,
-                    'willingToRelocate': false
-                  }
-                }
-              });
-            }
-            
-            final userData = userDoc.data();
-            final bool isProfileComplete = userData?['isProfileComplete'] ?? false;
-            
-            if (mounted) {
-              if (!isProfileComplete) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CompanyProfileSetupPage(),
-                  ),
-                );
-                return;
-              }
+      // Check if user document exists
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .get();
+      
+      if (!userDoc.exists) {
+        // Create new user document with the role from signup
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set({
+          'phoneNumber': userCredential.user!.phoneNumber,
+          'role': widget.userType,
+          'createdAt': FieldValue.serverTimestamp(),
+          'lastUpdated': FieldValue.serverTimestamp(),
+          'isProfileComplete': false,
+          'applicationCount': 0,
+          'profile': {
+            'personalInfo': {
+              'fullName': '',
+              'email': '',
+              'dateOfBirth': null,
+              'nationality': '',
+              'city': '',
+              'profilePicture': '',
+              'gender': '',
+              'maritalStatus': '',
+            },
+            'aboutMe': {
+              'description': '',
+              'title': '',
+              'summary': '',
+            },
+            'workExperience': [],
+            'education': [],
+            'skills': [],
+            'languages': [],
+            'certificates': [],
+            'preferences': {
+              'jobTypes': [],
+              'expectedSalary': {
+                'min': 0,
+                'max': 0,
+                'currency': 'SAR'
+              },
+              'preferredLocations': [],
+              'willingToTravel': false,
+              'willingToRelocate': false
             }
           }
-        }
-        
-        if (mounted) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const JobSeekerHomePage()),
-            (route) => false,
-          );
+        });
+      }
+
+      final userData = userDoc.data();
+      final bool isProfileComplete = userData?['isProfileComplete'] ?? false;
+      final String userRole = userData?['role'] ?? widget.userType;
+
+      if (mounted) {
+        if (!isProfileComplete) {
+          if (userRole == 'company') {
+            Navigator.pushReplacementNamed(context, '/company/home');
+          } else {
+            Navigator.pushReplacementNamed(context, '/');
+          }
+        } else {
+          if (userRole == 'company') {
+            Navigator.pushReplacementNamed(context, '/company/home');
+          } else {
+            Navigator.pushReplacementNamed(context, '/');
+          }
         }
       }
     } catch (e) {
@@ -160,7 +140,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invalid OTP: $e')),
+          SnackBar(content: Text('Error: $e')),
         );
       }
     }

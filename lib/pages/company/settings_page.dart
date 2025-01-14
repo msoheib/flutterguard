@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/recyclers/company_navbar.dart';
-import '../../theme/app_theme.dart';
 
 class CompanySettingsPage extends StatelessWidget {
   const CompanySettingsPage({super.key});

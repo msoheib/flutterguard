@@ -1,31 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:security_guard/models/job_post.dart';
-import 'package:security_guard/pages/job_details_page.dart';
+import '../models/application.dart';
+import '../theme/app_theme.dart';
+import '../pages/application_details_page.dart';
 
-class JobListingCard extends StatelessWidget {
-  final JobPost job;
+class ApplicationCard extends StatelessWidget {
+  final Application application;
+  final VoidCallback? onViewDetails;
 
-  const JobListingCard({
-    super.key,
-    required this.job,
-  });
+  const ApplicationCard({
+    Key? key,
+    required this.application,
+    this.onViewDetails,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 319,
+      width: double.infinity,
       height: 200,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        shadows: const [
           BoxShadow(
             color: Color(0x2D99AAC5),
             blurRadius: 62,
             offset: Offset(0, 4),
-          ),
+            spreadRadius: 0,
+          )
         ],
       ),
       child: Column(
@@ -33,7 +38,7 @@ class JobListingCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(
+          Container(
             height: 168,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -42,36 +47,34 @@ class JobListingCard extends StatelessWidget {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SvgPicture.asset(
-                          'assets/media/icons/bookmark.svg',
-                          width: 24,
-                          height: 24,
-                        ),
-                        const SizedBox(height: 25),
                         Row(
                           children: [
-                            const Text(
+                            Text(
                               'شهريا',
                               style: TextStyle(
                                 color: Color(0xFF6A6A6A),
                                 fontSize: 10,
                                 fontFamily: 'Cairo',
                                 fontWeight: FontWeight.w500,
+                                height: 1.40,
                               ),
                             ),
                             const SizedBox(width: 3),
                             Text(
-                              '${job.salary['amount']} ${job.salary['currency']} /',
-                              style: const TextStyle(
+                              '${application.salary} ر.س /',
+                              style: TextStyle(
                                 color: Color(0xFF1A1D1E),
                                 fontSize: 14,
                                 fontFamily: 'Cairo',
                                 fontWeight: FontWeight.w500,
+                                height: 1,
                               ),
                             ),
                           ],
@@ -79,13 +82,15 @@ class JobListingCard extends StatelessWidget {
                       ],
                     ),
                     Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Row(
                           children: [
                             Text(
-                              job.title,
-                              style: const TextStyle(
+                              application.jobTitle,
+                              style: TextStyle(
                                 color: Color(0xFF1A1D1E),
                                 fontSize: 14,
                                 fontFamily: 'Cairo',
@@ -96,11 +101,18 @@ class JobListingCard extends StatelessWidget {
                             Container(
                               width: 33,
                               height: 33,
-                              decoration: const ShapeDecoration(
+                              decoration: ShapeDecoration(
                                 color: Color(0xFFF3F3F3),
                                 shape: OvalBorder(),
                               ),
-                              child: const Icon(Icons.business, color: Color(0xFF6A6A6A)),
+                              child: application.companyLogo != null
+                                  ? ClipOval(
+                                      child: Image.network(
+                                        application.companyLogo!,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )
+                                  : null,
                             ),
                           ],
                         ),
@@ -108,8 +120,8 @@ class JobListingCard extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              job.location['city'] ?? '',
-                              style: const TextStyle(
+                              application.location,
+                              style: TextStyle(
                                 color: Color(0xFF6A6A6A),
                                 fontSize: 12,
                                 fontFamily: 'Cairo',
@@ -118,17 +130,17 @@ class JobListingCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 8),
                             Container(
-                              width: 2,
+                              width: 1.90,
                               height: 2,
-                              decoration: const ShapeDecoration(
+                              decoration: ShapeDecoration(
                                 color: Color(0xFF6A6A6A),
                                 shape: OvalBorder(),
                               ),
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              job.company,
-                              style: const TextStyle(
+                              application.companyName,
+                              style: TextStyle(
                                 color: Color(0xFF6A6A6A),
                                 fontSize: 12,
                                 fontFamily: 'Cairo',
@@ -148,14 +160,14 @@ class JobListingCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                       decoration: ShapeDecoration(
-                        color: const Color(0xFFF6F7F8),
+                        color: Color(0xFFF6F7F8),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       child: Text(
-                        job.title,
-                        style: const TextStyle(
+                        application.jobType,
+                        style: TextStyle(
                           color: Color(0xFF6A6A6A),
                           fontSize: 10,
                           fontFamily: 'Cairo',
@@ -167,14 +179,14 @@ class JobListingCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                       decoration: ShapeDecoration(
-                        color: const Color(0xFFF6F7F8),
+                        color: Color(0xFFF6F7F8),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       child: Text(
-                        job.employmentType ?? 'دوام كامل',
-                        style: const TextStyle(
+                        application.workType,
+                        style: TextStyle(
                           color: Color(0xFF6A6A6A),
                           fontSize: 10,
                           fontFamily: 'Cairo',
@@ -190,8 +202,8 @@ class JobListingCard extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => JobDetailsPage(
-                          jobId: job.id,
+                        builder: (context) => ApplicationDetailsPage(
+                          application: application,
                         ),
                       ),
                     );

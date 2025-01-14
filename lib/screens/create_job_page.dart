@@ -403,43 +403,38 @@ class _CreateJobPageState extends State<CreateJobPage> {
       final jobData = {
         'title': _titleController.text,
         'company': _companyController.text,
-        'location': _selectedCity,
+        'location': {
+          'city': _selectedCity,
+          'address': _selectedCity,
+        },
         'salary': {
           'amount': _salaryController.text,
           'currency': 'SAR',
         },
         'description': _descriptionController.text,
-        'skills': _selectedSkills,
+        'requiredSkills': _selectedSkills,
         'status': 'active',
-        'hirerId': userId,
-        'applicationsCount': 0,
+        'companyId': userId,
+        'totalApplications': 0,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
-      // Create the job post
-      final docRef = await FirebaseFirestore.instance
+      await FirebaseFirestore.instance
           .collection('jobs')
           .add(jobData);
 
-      // Show success message
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم نشر الوظيفة بنجاح'),
-            backgroundColor: Colors.green,
-          ),
-        );
         Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Job posted successfully')),
+        );
       }
     } catch (e) {
-      print('Error creating job post: $e');
+      print('Error creating job: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('حدث خطأ: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e')),
         );
       }
     } finally {

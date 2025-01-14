@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../models/job_post.dart';
-import '../services/job_service.dart';
-import '../services/application_service.dart';
+import '../services/job_application_service.dart';
+import '../screens/application_success_page.dart';
 
 class JobDetailPage extends StatefulWidget {
   final String jobId;
@@ -14,8 +14,7 @@ class JobDetailPage extends StatefulWidget {
 }
 
 class _JobDetailPageState extends State<JobDetailPage> {
-  final JobService _jobService = JobService();
-  final ApplicationService _applicationService = ApplicationService();
+  final JobApplicationService _applicationService = JobApplicationService();
   bool _hasApplied = false;
   bool _isLoading = false;
 
@@ -38,17 +37,27 @@ class _JobDetailPageState extends State<JobDetailPage> {
       await _applicationService.applyForJob(
         jobId: job.id,
         companyId: job.companyId,
+        coverLetter: null, // You might want to add a form for this
+        attachments: null, // And this
       );
-      setState(() => _hasApplied = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم تقديم طلبك بنجاح')),
-      );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ApplicationSuccessPage(),
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('حدث خطأ: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -79,21 +88,31 @@ class _JobDetailPageState extends State<JobDetailPage> {
 
               // Bottom Apply Button
               Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: ElevatedButton(
-                    onPressed: _hasApplied || _isLoading ? null : () => _applyForJob(job),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4CA6A8),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                bottom: 16,
+                left: 16,
+                right: 16,
+                child: ElevatedButton(
+                  onPressed: _hasApplied || _isLoading
+                      ? null 
+                      : () => _applyForJob(job),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4CA6A8),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(_hasApplied ? 'تم التقديم' : 'تقديم طلب'),
                   ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          _hasApplied ? 'تم التقديم' : 'تقديم طلب',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontFamily: 'Cairo',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
             ],

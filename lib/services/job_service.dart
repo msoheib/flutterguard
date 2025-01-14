@@ -42,7 +42,7 @@ class JobService {
     // Create the job document
     final jobRef = _firestore.collection('jobs').doc(jobId);
     batch.set(jobRef, {
-      ...job.toMap(),
+      ...job.toFirestore(),
       'id': jobId,
       'status': 'active',
       'createdAt': FieldValue.serverTimestamp(),
@@ -67,87 +67,69 @@ class JobService {
   }
 
   // Additional methods
-  Stream<List<JobPost>> getJobPosts({Map<String, dynamic>? filters}) {
-    Query query = _firestore.collection('jobs');
+  Stream<List<JobPost>> getJobPosts({Map<String, dynamic>? filters}) async* {
+    print('Getting job posts with filters: $filters');
+    
+    try {
+      var query = _firestore.collection('jobs')
+          .where('status', isEqualTo: 'active');
 
-    if (filters != null) {
-      print('Applying filters: $filters'); // Debug print
+      if (filters != null) {
+        // Get all jobs and filter in memory for both salary and location
+        yield* query.snapshots().map((snapshot) {
+          var jobs = snapshot.docs.map((doc) => JobPost.fromFirestore(doc)).toList();
+          
+          // Apply salary filter
+          final salaryMin = filters['salaryMin'];
+          final salaryMax = filters['salaryMax'];
+          if (salaryMin != null || salaryMax != null) {
+            jobs = jobs.where((job) {
+              // Debug log
+              print('Job salary data: ${job.salary}');
+              
+              final amount = job.salary['amount'];
+              if (amount == null) return false;
+              
+              final jobSalary = double.tryParse(amount.toString()) ?? 0;
+              final min = salaryMin?.toDouble() ?? 0;
+              final max = salaryMax?.toDouble() ?? double.infinity;
+              return jobSalary >= min && jobSalary <= max;
+            }).toList();
+          }
 
-      // Apply category filter
-      if (filters['category'] != null && filters['category'].isNotEmpty) {
-        print('Filtering by category: ${filters['category']}');
-        query = query.where('type', isEqualTo: filters['category']);
+          // Apply location filter
+          final location = filters['location'];
+          if (location != null && location.toString().isNotEmpty) {
+            jobs = jobs.where((job) {
+              final jobLocation = job.location;
+              // Debug log
+              print('Job location data: $jobLocation');
+              
+              if (jobLocation is String) {
+                return jobLocation == location;
+              } else if (jobLocation is Map) {
+                final address = jobLocation['address']?.toString() ?? '';
+                final city = jobLocation['city']?.toString() ?? '';
+                return address == location || city == location;
+              }
+              return false;
+            }).toList();
+          }
+          
+          print('Found ${jobs.length} jobs after all filtering');
+          return jobs;
+        });
+      } else {
+        // If no filters, return all active jobs
+        yield* query.snapshots().map((snapshot) => 
+          snapshot.docs.map((doc) => JobPost.fromFirestore(doc)).toList()
+        );
       }
-
-      // Apply region filter
-      if (filters['region'] != null && filters['region'].isNotEmpty) {
-        print('Filtering by region: ${filters['region']}');
-        query = query.where('location', isEqualTo: filters['region']);
-      }
-
-      // Apply salary range filter
-      if (filters['salaryRange'] != null) {
-        final minSalary = (filters['salaryRange']['min'] as double).toInt();
-        final maxSalary = (filters['salaryRange']['max'] as double).toInt();
-        print('Filtering by salary range: $minSalary - $maxSalary');
-        query = query.where('salary.amount', isGreaterThanOrEqualTo: minSalary)
-                    .where('salary.amount', isLessThanOrEqualTo: maxSalary);
-      }
-
-      // Apply date range filter
-      if (filters['dateRange'] != null && filters['dateRange'] is Map) {
-        final startDate = (filters['dateRange']['start'] as DateTime);
-        final endDate = (filters['dateRange']['end'] as DateTime);
-        print('Filtering by date range: $startDate - $endDate');
-        query = query.where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
-                    .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(endDate));
-      }
+    } catch (e, stackTrace) {
+      print('Error in getJobPosts: $e');
+      print('Stack trace: $stackTrace');
+      yield [];
     }
-
-    // First, let's check all jobs without filters
-    print('Checking all jobs in collection:');
-    _firestore.collection('jobs').get().then((snapshot) {
-      print('Total jobs in collection: ${snapshot.docs.length}');
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
-        print('Document ${doc.id}:');
-        print('  type: ${data['type']}');
-        print('  location: ${data['location']}');
-        print('  salary: ${data['salary']}');
-        print('  skills: ${data['skills']}');
-      }
-    });
-
-    return query.snapshots().map((snapshot) {
-      print('Raw Firestore query results: ${snapshot.docs.length} documents');
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        print('Document ${doc.id}:');
-        print('  type: ${data['type']}');
-        print('  location: ${data['location']}');
-        print('  salary: ${data['salary']}');
-        print('  skills: ${data['skills']}');
-      }
-
-      var jobs = snapshot.docs.map((doc) => JobPost.fromFirestore(doc)).toList();
-      print('Retrieved ${jobs.length} jobs before skills filtering');
-
-      // Apply skills filter if specified
-      if (filters != null && filters['skills'] != null && filters['skills'].isNotEmpty) {
-        print('Filtering by skills: ${filters['skills']}');
-        jobs = jobs.where((job) {
-          print('Checking job ${job.title}:');
-          print('  Job skills: ${job.skills}');
-          print('  Filter skills: ${filters['skills']}');
-          final hasMatchingSkills = job.skills.any((skill) => filters['skills'].contains(skill));
-          print('  Has matching skills: $hasMatchingSkills');
-          return hasMatchingSkills;
-        }).toList();
-        print('${jobs.length} jobs after skills filtering');
-      }
-
-      return jobs;
-    });
   }
 
   Stream<List<JobProfile>> getJobProfiles() {
@@ -167,32 +149,9 @@ class JobService {
     }).toList();
   }
 
+  // Remove this method as it's now handled in JobApplicationService
   Future<void> applyForJob(String jobId, String userId, String coverLetter) {
-    return _firestore.runTransaction((transaction) async {
-      // Create application
-      DocumentReference applicationRef = _firestore.collection('applications').doc();
-      
-      // Update job applications count
-      DocumentReference jobRef = _firestore.collection('jobs').doc(jobId);
-      DocumentReference userRef = _firestore.collection('users').doc(userId);
-
-      transaction.set(applicationRef, {
-        'jobId': jobId,
-        'userId': userId,
-        'status': 'pending',
-        'appliedAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'coverLetter': coverLetter,
-      });
-
-      transaction.update(jobRef, {
-        'applicationsCount': FieldValue.increment(1),
-      });
-
-      transaction.update(userRef, {
-        'applicationCount': FieldValue.increment(1),
-      });
-    });
+    throw UnimplementedError('Use JobApplicationService.applyForJob() instead');
   }
 
   Stream<QuerySnapshot> getJobPostings() {
