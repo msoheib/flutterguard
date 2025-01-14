@@ -35,13 +35,19 @@ class ApplicationService {
 
       // Handle salary map
       Map<String, dynamic> salaryMap;
-      if (jobData['salary'] is num) {
+      double salaryAmount;
+      
+      if (jobData['salary'] is Map) {
+        salaryMap = Map<String, dynamic>.from(jobData['salary']);
+        salaryAmount = (salaryMap['amount'] is String ? 
+            double.parse(salaryMap['amount']) : 
+            (salaryMap['amount'] ?? 0).toDouble());
+      } else {
+        salaryAmount = 0.0;
         salaryMap = {
-          'amount': jobData['salary'],
+          'amount': salaryAmount,
           'currency': 'SAR'
         };
-      } else {
-        salaryMap = Map<String, dynamic>.from(jobData['salary'] ?? {});
       }
 
       final application = Application(
@@ -56,7 +62,7 @@ class ApplicationService {
         companyName: jobData['companyName'] ?? '',
         location: jobData['location'] ?? '',
         locationMap: locationMap,
-        salary: (jobData['salary'] ?? 0).toDouble(),
+        salary: salaryAmount,
         salaryMap: salaryMap,
         jobType: jobData['type'] ?? '',
         workType: jobData['workType'] ?? '',

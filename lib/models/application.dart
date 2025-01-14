@@ -85,7 +85,9 @@ class Application {
       companyLogo: data['companyLogo'],
       location: data['location'] ?? '',
       locationMap: Map<String, dynamic>.from(data['locationMap'] ?? {}),
-      salary: (data['salary'] ?? 0).toDouble(),
+      salary: (data['salary'] is Map ? 
+          (data['salary']['amount'] ?? 0).toDouble() : 
+          (data['salary'] ?? 0).toDouble()),
       salaryMap: Map<String, dynamic>.from(data['salaryMap'] ?? {}),
       jobType: data['jobType'] ?? '',
       workType: data['workType'] ?? '',

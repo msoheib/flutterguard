@@ -3,6 +3,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../models/job_post.dart';
 import '../services/job_application_service.dart';
 import '../screens/application_success_page.dart';
+import '../widgets/recyclers/appbar.dart';
+import '../services/job_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class JobDetailPage extends StatefulWidget {
   final String jobId;
@@ -15,6 +18,7 @@ class JobDetailPage extends StatefulWidget {
 
 class _JobDetailPageState extends State<JobDetailPage> {
   final JobApplicationService _applicationService = JobApplicationService();
+  final JobService _jobService = JobService();
   bool _hasApplied = false;
   bool _isLoading = false;
 
@@ -35,10 +39,8 @@ class _JobDetailPageState extends State<JobDetailPage> {
     setState(() => _isLoading = true);
     try {
       await _applicationService.applyForJob(
-        jobId: job.id,
-        companyId: job.companyId,
-        coverLetter: null, // You might want to add a form for this
-        attachments: null, // And this
+        job,
+        FirebaseAuth.instance.currentUser?.displayName ?? '',
       );
       if (mounted) {
         Navigator.pushReplacement(
@@ -65,59 +67,75 @@ class _JobDetailPageState extends State<JobDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
-      body: StreamBuilder<JobPost?>(
-        stream: _jobService.getJobStream(widget.jobId),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('حدث خطأ: ${snapshot.error}'));
-          }
+      body: Column(
+        children: [
+          const CustomAppBar(
+            title: 'تفاصيل الوظيفة',
+          ),
+          Expanded(
+            child: StreamBuilder<JobPost?>(
+              stream: _jobService.getJobStream(widget.jobId),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(child: Text('حدث خطأ: ${snapshot.error}'));
+                }
 
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          final job = snapshot.data!;
+                final job = snapshot.data!;
 
-          return Stack(
-            children: [
-              // ... rest of your existing UI code, but use job from snapshot
-              // For example:
-              Text(job.title),
-              Text(job.company),
-              // etc...
-
-              // Bottom Apply Button
-              Positioned(
-                bottom: 16,
-                left: 16,
-                right: 16,
-                child: ElevatedButton(
-                  onPressed: _hasApplied || _isLoading
-                      ? null 
-                      : () => _applyForJob(job),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CA6A8),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                return Stack(
+                  children: [
+                    // Your existing job details content
+                    SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(job.title),
+                          Text(job.company),
+                          // ... rest of your job details
+                        ],
+                      ),
                     ),
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                          _hasApplied ? 'تم التقديم' : 'تقديم طلب',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontFamily: 'Cairo',
-                            fontWeight: FontWeight.w600,
+
+                    // Bottom Apply Button
+                    Positioned(
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                      child: ElevatedButton(
+                        onPressed: _hasApplied || _isLoading
+                            ? null 
+                            : () => _applyForJob(job),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4CA6A8),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                ),
-              ),
-            ],
-          );
-        },
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                _hasApplied ? 'تم التقديم' : 'تقديم طلب',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontFamily: 'Cairo',
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

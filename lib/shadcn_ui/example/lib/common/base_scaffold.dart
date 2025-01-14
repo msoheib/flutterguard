@@ -1,5 +1,5 @@
 import 'package:awesome_flutter_extensions/awesome_flutter_extensions.dart';
-import 'package:example/common/app_bar.dart';
+import 'package:example/common/%5Bdeprecated%5Dapp_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:multi_split_view/multi_split_view.dart';
 

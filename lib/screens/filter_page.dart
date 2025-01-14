@@ -15,7 +15,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
   final TextEditingController _jobTitleController = TextEditingController();
   
   String? _selectedLocation;
-  List<String> _selectedSkills = [];
+  final List<String> _selectedSkills = [];
 
   final List<String> skills = [
     'حارس أمن',

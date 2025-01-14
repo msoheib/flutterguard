@@ -107,12 +107,10 @@ class JobService {
               
               if (jobLocation is String) {
                 return jobLocation == location;
-              } else if (jobLocation is Map) {
-                final address = jobLocation['address']?.toString() ?? '';
-                final city = jobLocation['city']?.toString() ?? '';
-                return address == location || city == location;
+              } else {
+                Map<String, dynamic> locationMap = Map<String, dynamic>.from(location);
+                return locationMap['city'] == location || locationMap['address'] == location;
               }
-              return false;
             }).toList();
           }
           

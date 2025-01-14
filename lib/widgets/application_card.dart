@@ -8,10 +8,10 @@ class ApplicationCard extends StatelessWidget {
   final VoidCallback? onViewDetails;
 
   const ApplicationCard({
-    Key? key,
+    super.key,
     required this.application,
     this.onViewDetails,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +38,7 @@ class ApplicationCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
+          SizedBox(
             height: 168,
             child: Column(
               mainAxisSize: MainAxisSize.min,

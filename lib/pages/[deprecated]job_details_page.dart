@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../models/job_post.dart';
 import '../services/job_application_service.dart';
 import '../services/job_service.dart';
@@ -146,27 +145,8 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
           // Action buttons
           const SizedBox(height: 16),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton(
-                onPressed: () {},
-                style: TextButton.styleFrom(
-                  backgroundColor: const Color(0xFFF8F8F9),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-                child: const Text(
-                  'حفظ',
-                  style: TextStyle(
-                    color: Color(0xFF4CA6A8),
-                    fontSize: 14,
-                    fontFamily: 'Cairo',
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
               ElevatedButton(
                 onPressed: () => _applyForJob(job),
                 style: ElevatedButton.styleFrom(

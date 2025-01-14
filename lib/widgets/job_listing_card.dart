@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:security_guard/models/job_post.dart';
-import 'package:security_guard/pages/job_details_page.dart';
+import 'package:security_guard/screens/job_detail_page.dart';
 
 class JobListingCard extends StatelessWidget {
   final JobPost job;
@@ -190,7 +190,7 @@ class JobListingCard extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => JobDetailsPage(
+                        builder: (context) => JobDetailPage(
                           jobId: job.id,
                         ),
                       ),

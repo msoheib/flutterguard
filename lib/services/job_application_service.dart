@@ -7,6 +7,15 @@ class JobApplicationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  double getSalaryAmount(dynamic amount) {
+    if (amount is String) {
+      return double.parse(amount);
+    } else if (amount is num) {
+      return amount.toDouble();
+    }
+    return 0.0;
+  }
+
   Future<void> applyForJob(JobPost job, String jobSeekerName) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
@@ -37,7 +46,7 @@ class JobApplicationService {
       companyName: job.companyName,
       location: job.location['city'] ?? '',
       locationMap: job.location,
-      salary: (job.salary['amount'] ?? 0).toDouble(),
+      salary: getSalaryAmount(job.salary['amount']),
       salaryMap: job.salary,
       jobType: job.type,
       workType: job.workType,

@@ -57,7 +57,7 @@ class UserNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: 104,
       child: Column(
         mainAxisSize: MainAxisSize.min,

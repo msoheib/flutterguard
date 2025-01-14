@@ -1,4 +1,4 @@
-import 'package:example/common/app_bar.dart';
+import 'package:example/common/%5Bdeprecated%5Dapp_bar.dart';
 import 'package:example/pages/accordion.dart';
 import 'package:example/pages/alert.dart';
 import 'package:example/pages/avatar.dart';

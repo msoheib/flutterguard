@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/application.dart';
+import '../../models/job_application.dart';
 
 class JobApplicantsPage extends StatefulWidget {
   final String jobId;
+  final String jobTitle;
 
   const JobApplicantsPage({
     super.key,
     required this.jobId,
+    required this.jobTitle,
   });
 
   @override
@@ -138,7 +140,7 @@ class _JobApplicantsPageState extends State<JobApplicantsPage> {
       stream: FirebaseFirestore.instance
           .collection('applications')
           .where('jobId', isEqualTo: widget.jobId)
-          .orderBy('appliedDate', descending: true)
+          .orderBy('appliedAt', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -150,7 +152,7 @@ class _JobApplicantsPageState extends State<JobApplicantsPage> {
         }
 
         final applications = snapshot.data!.docs
-            .map((doc) => Application.fromFirestore(doc))
+            .map((doc) => JobApplication.fromFirestore(doc))
             .where((application) => 
               _searchQuery.isEmpty || 
               application.userId.toLowerCase().contains(_searchQuery.toLowerCase()))
@@ -171,35 +173,195 @@ class _JobApplicantsPageState extends State<JobApplicantsPage> {
     );
   }
 
-  Widget _buildApplicantCard(Application application) {
+  Widget _buildApplicantCard(JobApplication application) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
-        title: Text(application.userId), // You might want to fetch user details
-        subtitle: Text('Applied: ${application.appliedDate.toString()}'),
-        trailing: Text(application.status),
+        title: Text(application.userId),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('تاريخ التقديم: ${_formatDate(application.appliedAt)}'),
+            const SizedBox(height: 4),
+            _buildStatusChip(application.status),
+          ],
+        ),
+        trailing: PopupMenuButton<String>(
+          onSelected: (String status) => _updateApplicationStatus(application, status),
+          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+            const PopupMenuItem<String>(
+              value: JobApplication.STATUS_PENDING,
+              child: Text('قيد المراجعة'),
+            ),
+            const PopupMenuItem<String>(
+              value: JobApplication.STATUS_REVIEWED,
+              child: Text('تمت المراجعة'),
+            ),
+            const PopupMenuItem<String>(
+              value: JobApplication.STATUS_ACCEPTED,
+              child: Text('قبول'),
+            ),
+            const PopupMenuItem<String>(
+              value: JobApplication.STATUS_REJECTED,
+              child: Text('رفض'),
+            ),
+          ],
+        ),
         onTap: () => _showApplicationDetails(application),
       ),
     );
   }
 
+  Widget _buildStatusChip(String status) {
+    Color chipColor;
+    String statusText;
+
+    switch (status) {
+      case JobApplication.STATUS_PENDING:
+        chipColor = Colors.orange;
+        statusText = 'قيد المراجعة';
+        break;
+      case JobApplication.STATUS_REVIEWED:
+        chipColor = Colors.blue;
+        statusText = 'تمت المراجعة';
+        break;
+      case JobApplication.STATUS_ACCEPTED:
+        chipColor = Colors.green;
+        statusText = 'مقبول';
+        break;
+      case JobApplication.STATUS_REJECTED:
+        chipColor = Colors.red;
+        statusText = 'مرفوض';
+        break;
+      default:
+        chipColor = Colors.grey;
+        statusText = 'غير معروف';
+    }
+
+    return Chip(
+      label: Text(
+        statusText,
+        style: const TextStyle(color: Colors.white, fontSize: 12),
+      ),
+      backgroundColor: chipColor,
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
+
+  void _showApplicationDetails(JobApplication application) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تفاصيل المتقدم'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('المتقدم: ${application.userId}'),
+              const SizedBox(height: 8),
+              Text('تاريخ التقديم: ${_formatDate(application.appliedAt)}'),
+              if (application.reviewedAt != null) ...[
+                const SizedBox(height: 8),
+                Text('تاريخ المراجعة: ${_formatDate(application.reviewedAt!)}'),
+              ],
+              const SizedBox(height: 8),
+              _buildStatusChip(application.status),
+              if (application.coverLetter != null) ...[
+                const SizedBox(height: 16),
+                const Text(
+                  'خطاب التقديم:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(application.coverLetter!),
+              ],
+              if (application.attachments != null && application.attachments!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Text(
+                  'المرفقات:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                ...application.attachments!.map((url) => TextButton(
+                  onPressed: () => _openAttachment(url),
+                  child: Text(url),
+                )),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إغلاق'),
+          ),
+          TextButton(
+            onPressed: () {
+              _updateApplicationStatus(application, JobApplication.STATUS_ACCEPTED);
+              Navigator.pop(context);
+            },
+            child: const Text('قبول'),
+          ),
+          TextButton(
+            onPressed: () {
+              _updateApplicationStatus(application, JobApplication.STATUS_REJECTED);
+              Navigator.pop(context);
+            },
+            child: const Text('رفض'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openAttachment(String url) {
+    // TODO: Implement attachment viewing
+    // You can use url_launcher package to open the attachment
+  }
+
+  Future<void> _updateApplicationStatus(JobApplication application, String newStatus) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('applications')
+          .doc(application.id)
+          .update({
+        'status': newStatus,
+        'reviewedAt': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            newStatus == JobApplication.STATUS_ACCEPTED
+                ? 'تم قبول المتقدم'
+                : newStatus == JobApplication.STATUS_REJECTED
+                    ? 'تم رفض المتقدم'
+                    : 'تم تحديث الحالة'
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('حدث خطأ أثناء تحديث الحالة')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return CompanyRouteWrapper(
-      currentIndex: 2,
-      child: Scaffold(
-        backgroundColor: const Color(0xFFFBFBFB),
-        body: Column(
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 24),
-            _buildSearchBar(),
-            const SizedBox(height: 24),
-            Expanded(
-              child: _buildApplicantsList(),
-            ),
-          ],
-        ),
+    return Scaffold(
+      backgroundColor: const Color(0xFFFBFBFB),
+      body: Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: _buildApplicantsList(),
+          ),
+        ],
       ),
     );
   }

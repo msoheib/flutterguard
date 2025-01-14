@@ -82,49 +82,23 @@ class _CreateJobPageState extends State<CreateJobPage> {
   Widget _buildFormField({
     required String label,
     required TextEditingController controller,
-    String? hint,
-    TextInputType keyboardType = TextInputType.text,
+    required String hint,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
     bool readOnly = false,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 14,
-            fontFamily: 'Cairo',
-            fontWeight: FontWeight.w500,
-          ),
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      readOnly: readOnly,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
-        const SizedBox(height: 6),
-        Container(
-          decoration: ShapeDecoration(
-            color: readOnly ? const Color(0xFFF5F5F5) : Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: TextFormField(
-            controller: controller,
-            keyboardType: keyboardType,
-            textAlign: TextAlign.right,
-            readOnly: readOnly,
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: const TextStyle(
-                color: Color(0xFF6A6A6A),
-                fontSize: 14,
-                fontFamily: 'Cairo',
-                fontWeight: FontWeight.w400,
-              ),
-              contentPadding: const EdgeInsets.all(8),
-              border: InputBorder.none,
-            ),
-          ),
-        ),
-      ],
+      ),
+      validator: validator,
     );
   }
 
@@ -400,6 +374,8 @@ class _CreateJobPageState extends State<CreateJobPage> {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId == null) throw Exception('User not authenticated');
 
+      final double salary = double.parse(_salaryController.text);
+
       final jobData = {
         'title': _titleController.text,
         'company': _companyController.text,
@@ -408,7 +384,7 @@ class _CreateJobPageState extends State<CreateJobPage> {
           'address': _selectedCity,
         },
         'salary': {
-          'amount': _salaryController.text,
+          'amount': salary,
           'currency': 'SAR',
         },
         'description': _descriptionController.text,
@@ -650,6 +626,15 @@ class _CreateJobPageState extends State<CreateJobPage> {
                       controller: _salaryController,
                       hint: 'مرتب الوظيفة شهريا',
                       keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'الرجاء إدخال الراتب';
+                        }
+                        if (double.tryParse(value) == null) {
+                          return 'الرجاء إدخال رقم صحيح';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 24),
                     _buildDescriptionField(),

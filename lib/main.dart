@@ -7,7 +7,7 @@ import 'pages/settings_page.dart';
 import 'services/service_locator.dart';
 import 'services/notification_service.dart';
 import 'services/navigation_service.dart';
-import 'pages/job_details_page.dart';
+import 'screens/job_detail_page.dart';
 import 'widgets/auth_wrapper.dart';
 import 'pages/job_seeker_home_page.dart';
 import 'pages/applications_history_page.dart';
@@ -224,8 +224,8 @@ class MyApp extends StatelessWidget {
         
         // Common routes
         '/profile': (context) => const ProfileCvScreen(),
-        '/job-details': (context) => JobDetailsPage(
-          jobId: ModalRoute.of(context)!.settings.arguments as String,
+        '/job-details': (context) => JobDetailPage(
+          jobId: '',
         ),
         '/superadmin': (context) => const SuperAdminPage(),
         '/home': (context) => const JobSeekerHomePage(),  // For job seekers
