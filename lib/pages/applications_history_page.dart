@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../services/job_application_service.dart';
 import '../models/application.dart';
 import '../widgets/user_route_wrapper.dart';
-import '../widgets/application_card.dart';
+import '../widgets/job_listing_card.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ApplicationsHistoryPage extends StatelessWidget {
   static final JobApplicationService _applicationService = JobApplicationService();
@@ -11,6 +13,8 @@ class ApplicationsHistoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return UserRouteWrapper(
       currentIndex: 1,
       child: Scaffold(
@@ -31,61 +35,107 @@ class ApplicationsHistoryPage extends StatelessWidget {
                   child: Text(
                     'تقديماتي',
                     style: TextStyle(
+                      color: Color(0xFF6A6A6A),
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo',
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: StreamBuilder<List<Application>>(
-                  stream: _applicationService.getUserApplications(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return Center(child: Text('حدث خطأ: ${snapshot.error}'));
-                    }
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('applications')
+                    .where('userId', isEqualTo: user?.uid)
+                    .orderBy('appliedAt', descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                    if (!snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
 
-                    final applications = snapshot.data!;
+                  final applications = snapshot.data?.docs ?? [];
 
-                    if (applications.isEmpty) {
-                      return const Center(child: Text('لا توجد تقديمات'));
-                    }
-
-                    return ListView.builder(
-                      itemCount: applications.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: ApplicationCard(
-                            application: applications[index],
-                            onViewDetails: () {
-                              // Navigate to application details
-                              Navigator.pushNamed(
-                                context,
-                                '/jobseeker/applications/details',
-                                arguments: applications[index],
-                              );
-                            },
-                          ),
-                        );
-                      },
+                  if (applications.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'لم تقم بالتقديم على أي وظيفة بعد',
+                        style: TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 16,
+                          color: Color(0xFF6A6A6A),
+                        ),
+                      ),
                     );
-                  },
-                ),
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: applications.length,
+                    itemBuilder: (context, index) {
+                      final application = applications[index].data() as Map<String, dynamic>;
+                      return JobListingCard(
+                        title: application['jobTitle'] ?? '',
+                        company: application['company'] ?? '',
+                        location: application['location'] ?? {},
+                        salary: application['salary'] ?? {},
+                        jobType: application['jobType'] ?? '',
+                        workType: application['workType'] ?? '',
+                        status: application['status'] ?? 'pending',
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context, 
+                            '/applications/details',
+                            arguments: applications[index].id,
+                          );
+                        },
+                        buttonText: _getStatusText(application['status'] ?? 'pending'),
+                        buttonColor: _getStatusColor(application['status'] ?? 'pending'),
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'pending':
+        return 'قيد المراجعة';
+      case 'reviewed':
+        return 'تمت المراجعة';
+      case 'accepted':
+        return 'مقبول';
+      case 'rejected':
+        return 'مرفوض';
+      default:
+        return 'غير معروف';
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'pending':
+        return Colors.orange;
+      case 'reviewed':
+        return Colors.blue;
+      case 'accepted':
+        return Colors.green;
+      case 'rejected':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 } 

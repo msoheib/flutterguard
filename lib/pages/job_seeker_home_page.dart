@@ -8,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../pages/profile_cv_screen.dart';
 import '../services/service_locator.dart';
 import '../widgets/user_route_wrapper.dart';
+import '../screens/job_detail_page.dart';
 
 class JobSeekerHomePage extends StatefulWidget {
   const JobSeekerHomePage({super.key});
@@ -239,7 +240,17 @@ class _JobSeekerHomePageState extends State<JobSeekerHomePage> {
                       itemCount: jobs.length,
                       padding: const EdgeInsets.all(16),
                       itemBuilder: (context, index) {
-                        return JobListingCard(job: jobs[index]);
+                        return JobListingCard(
+                          job: jobs[index],
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => JobDetailPage(job: jobs[index]),
+                              ),
+                            );
+                          },
+                        );
                       },
                     );
                   },

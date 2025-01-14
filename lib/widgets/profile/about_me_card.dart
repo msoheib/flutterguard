@@ -1,11 +1,11 @@
-baimport 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class AboutMeCard extends StatefulWidget {
   const AboutMeCard({super.key});
 
   @override
-  _AboutMeCardState createState() => _AboutMeCardState();
+  State<AboutMeCard> createState() => _AboutMeCardState();
 }
 
 class _AboutMeCardState extends State<AboutMeCard> {
@@ -27,7 +27,11 @@ class _AboutMeCardState extends State<AboutMeCard> {
             children: [
               GestureDetector(
                 onTap: _editAboutMe,
-                child: SvgPicture.asset('assets/media/icons/show_more.svg', width: 24, height: 24),
+                child: SvgPicture.asset(
+                  'assets/media/icons/show_more.svg',
+                  width: 24,
+                  height: 24,
+                ),
               ),
               Row(
                 children: [
@@ -41,7 +45,11 @@ class _AboutMeCardState extends State<AboutMeCard> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  SvgPicture.asset('assets/media/icons/about_me.svg', width: 24, height: 24),
+                  SvgPicture.asset(
+                    'assets/media/icons/about_me.svg',
+                    width: 24,
+                    height: 24,
+                  ),
                 ],
               ),
             ],

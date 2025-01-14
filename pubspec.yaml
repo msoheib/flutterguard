@@ -39,6 +39,7 @@ flutter:
     - assets/media/icons/bookmark.svg
     - assets/media/icons/settings.svg
     - assets/media/icons/arrow_back.svg
+    - assets/icons/
   fonts:
     - family: Cairo
       fonts:

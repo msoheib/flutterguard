@@ -30,8 +30,8 @@ class UserNavBar extends StatelessWidget {
           children: [
             SvgPicture.asset(
               iconPath,
-              width: 24,
-              height: 24,
+              width: 30,
+              height: 30,
               colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
               placeholderBuilder: (context) => Icon(Icons.error),
             ),

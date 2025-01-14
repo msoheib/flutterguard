@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'pages/login_page.dart';
 import 'pages/signup_page.dart';
 import 'pages/profile_cv_screen.dart';
@@ -7,7 +8,6 @@ import 'pages/settings_page.dart';
 import 'services/service_locator.dart';
 import 'services/notification_service.dart';
 import 'services/navigation_service.dart';
-import 'screens/job_detail_page.dart';
 import 'widgets/auth_wrapper.dart';
 import 'pages/job_seeker_home_page.dart';
 import 'pages/applications_history_page.dart';
@@ -15,11 +15,12 @@ import 'pages/chat_page.dart';
 import 'pages/company/company_home_page.dart';
 import 'pages/company/company_applications_page.dart';
 import 'pages/company/company_chat_page.dart';
-import 'screens/create_job_page.dart';
+import 'pages/company/create_job_page.dart';
 import 'pages/company/company_settings_page.dart';
 import 'pages/superadmin_page.dart';
 import 'theme/app_theme.dart';
 import 'screens/application_success_page.dart';
+import 'screens/applicant_review_page.dart';
 
 Future<void> main() async {
   try {
@@ -205,32 +206,20 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const AuthWrapper(),
-        // Auth routes
         '/login': (context) => const LoginPage(),
         '/signup': (context) => const SignupPage(),
-        
-        // Job seeker routes
         '/jobseeker/home': (context) => const JobSeekerHomePage(),
         '/jobseeker/applications': (context) => const ApplicationsHistoryPage(),
         '/jobseeker/chat': (context) => const ChatPage(),
-        '/jobseeker/settings': (context) => const SettingsPage(),
-        
-        // Company routes
+        '/jobseeker/profile': (context) => const ProfileCvScreen(),
         '/company/home': (context) => const CompanyHomePage(),
         '/company/applications': (context) => const CompanyApplicationsPage(),
         '/company/chat': (context) => const CompanyChatPage(),
-        '/company/create-job': (context) => const CreateJobPage(),
         '/company/settings': (context) => const CompanySettingsPage(),
-        
-        // Common routes
-        '/profile': (context) => const ProfileCvScreen(),
-        '/job-details': (context) => JobDetailPage(
-          jobId: '',
-        ),
+        '/company/create-job': (context) => const CreateJobPage(),
         '/superadmin': (context) => const SuperAdminPage(),
-        '/home': (context) => const JobSeekerHomePage(),  // For job seekers
-        '/company/home': (context) => const CompanyHomePage(),  // For companies
         '/application-success': (context) => const ApplicationSuccessPage(),
+        '/applicant-review': (context) => const ApplicantReviewPage(),
       },
     );
   }
