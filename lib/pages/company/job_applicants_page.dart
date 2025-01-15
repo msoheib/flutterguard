@@ -23,12 +23,10 @@ class JobApplicantsPage extends StatelessWidget {
     if (companyId == null) return;
 
     final chatService = ChatService();
-    // Create or get existing chat
     final chatId = await chatService.createChat(applicantId, companyId, jobId);
     
     if (!context.mounted) return;
     
-    // Get chat data
     final chatDoc = await FirebaseFirestore.instance
         .collection('chats')
         .doc(chatId)
@@ -36,7 +34,6 @@ class JobApplicantsPage extends StatelessWidget {
         
     final chat = Chat.fromFirestore(chatDoc);
 
-    // Navigate to chat detail page
     if (!context.mounted) return;
     Navigator.push(
       context,
@@ -49,6 +46,78 @@ class JobApplicantsPage extends StatelessWidget {
     );
   }
 
+  Future<void> _updateApplicationStatus(String applicationId, String newStatus) async {
+    try {
+      // Get the application data first to access user ID and job details
+      final applicationDoc = await FirebaseFirestore.instance
+          .collection('applications')
+          .doc(applicationId)
+          .get();
+      
+      final applicationData = applicationDoc.data();
+      if (applicationData == null) return;
+
+      final userId = applicationData['userId'];
+      
+      // Update application status
+      await FirebaseFirestore.instance
+          .collection('applications')
+          .doc(applicationId)
+          .update({
+        'status': newStatus,
+        'reviewedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Create notification for the user
+      String notificationMessage;
+      switch (newStatus) {
+        case 'accepted':
+          notificationMessage = 'تم قبول طلبك للوظيفة: $jobTitle';
+          break;
+        case 'rejected':
+          notificationMessage = 'تم رفض طلبك للوظيفة: $jobTitle';
+          break;
+        case 'need_details':
+          notificationMessage = 'يحتاج طلبك لمزيد من التفاصيل للوظيفة: $jobTitle';
+          break;
+        default:
+          notificationMessage = 'تم تحديث حالة طلبك للوظيفة: $jobTitle';
+      }
+
+      // Add notification to Firestore
+      await FirebaseFirestore.instance
+          .collection('notifications')
+          .add({
+        'userId': userId,
+        'message': notificationMessage,
+        'jobId': jobId,
+        'applicationId': applicationId,
+        'type': 'application_status',
+        'status': newStatus,
+        'createdAt': FieldValue.serverTimestamp(),
+        'isRead': false,
+      });
+
+    } catch (e) {
+      print('Error updating application status: $e');
+    }
+  }
+
+  Color _getStatusColor(String? status) {
+    switch (status) {
+      case 'pending':
+        return Colors.orange;
+      case 'accepted':
+        return Colors.green;
+      case 'rejected':
+        return Colors.red;
+      case 'need_details':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,224 +128,228 @@ class JobApplicantsPage extends StatelessWidget {
             title: 'المتقدمين',
             onBackPressed: () => Navigator.pop(context),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  jobTitle,
-                  style: const TextStyle(
-                    color: Color(0xFF1A1D1E),
-                    fontSize: 16,
-                    fontFamily: 'Cairo',
-                    fontWeight: FontWeight.w700,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 16),
-                StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('applications')
-                      .where('jobId', isEqualTo: jobId)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return const Text('حدث خطأ');
-                    }
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      jobTitle,
+                      style: const TextStyle(
+                        color: Color(0xFF1A1D1E),
+                        fontSize: 16,
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.w700,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 16),
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('applications')
+                          .where('jobId', isEqualTo: jobId)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return const Text('حدث خطأ');
+                        }
 
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const CircularProgressIndicator();
-                    }
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
 
-                    final applications = snapshot.data?.docs ?? [];
+                        final applications = snapshot.data?.docs ?? [];
 
-                    if (applications.isEmpty) {
-                      return const Center(
-                        child: Text('لا يوجد متقدمين حالياً'),
-                      );
-                    }
+                        if (applications.isEmpty) {
+                          return const Center(
+                            child: Text('لا يوجد متقدمين حالياً'),
+                          );
+                        }
 
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: applications.length,
-                      itemBuilder: (context, index) {
-                        final application = applications[index].data() as Map<String, dynamic>;
-                        return Container(
-                          width: double.infinity,
-                          height: 192,
-                          margin: const EdgeInsets.only(bottom: 16),
-                          padding: const EdgeInsets.all(16),
-                          decoration: ShapeDecoration(
-                            color: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            shadows: const [
-                              BoxShadow(
-                                color: Color(0x2D99AAC5),
-                                blurRadius: 62,
-                                offset: Offset(0, 4),
-                                spreadRadius: 0,
-                              )
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: applications.length,
+                          itemBuilder: (context, index) {
+                            final application = applications[index].data() as Map<String, dynamic>;
+                            return Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(16),
+                              decoration: ShapeDecoration(
+                                color: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                shadows: const [
+                                  BoxShadow(
+                                    color: Color(0x2D99AAC5),
+                                    blurRadius: 62,
+                                    offset: Offset(0, 4),
+                                    spreadRadius: 0,
+                                  )
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: ShapeDecoration(
-                                      color: const Color(0xFFF6F7F8),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        application['jobSeekerName'] ?? 'مجهول',
+                                        style: const TextStyle(
+                                          color: Color(0xFF1A1D1E),
+                                          fontSize: 14,
+                                          fontFamily: 'Cairo',
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                       ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        width: 33,
+                                        height: 33,
+                                        decoration: const ShapeDecoration(
+                                          color: Color(0xFFF3F3F3),
+                                          shape: OvalBorder(),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    jobTitle,
+                                    style: const TextStyle(
+                                      color: Color(0xFF6A6A6A),
+                                      fontSize: 12,
+                                      fontFamily: 'Cairo',
                                     ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          'منذ 20 ساعة',
-                                          style: const TextStyle(
-                                            color: Color(0xFF6A6A6A),
-                                            fontSize: 10,
-                                            fontFamily: 'Cairo',
-                                            fontWeight: FontWeight.w400,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          TextButton(
+                                            onPressed: () => _createOrNavigateToChat(
+                                              context,
+                                              application['userId'],
+                                              application['jobSeekerName'] ?? 'مجهول',
+                                              jobId,
+                                            ),
+                                            style: TextButton.styleFrom(
+                                              backgroundColor: const Color(0xFFF3F3F3),
+                                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                            ),
+                                            child: const Text(
+                                              'مراسلة',
+                                              style: TextStyle(
+                                                color: Color(0xFF4CA6A8),
+                                                fontSize: 14,
+                                                fontFamily: 'Cairo',
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        SvgPicture.asset(
-                                          'assets/media/icons/clock.svg',
-                                          width: 10,
-                                          height: 10,
-                                        ),
-                                      ],
-                                    ),
+                                          const SizedBox(width: 8),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => ApplicantProfilePage(
+                                                    applicantId: application['userId'],
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            style: TextButton.styleFrom(
+                                              backgroundColor: const Color(0xFF4CA6A8),
+                                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                            ),
+                                            child: const Text(
+                                              'السيرة الذاتية',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 14,
+                                                fontFamily: 'Cairo',
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      DropdownButton<String>(
+                                        value: application['status'] ?? 'pending',
+                                        items: [
+                                          DropdownMenuItem(
+                                            value: 'pending',
+                                            child: Text(
+                                              'قيد المراجعة',
+                                              style: TextStyle(
+                                                color: _getStatusColor('pending'),
+                                                fontFamily: 'Cairo',
+                                              ),
+                                            ),
+                                          ),
+                                          DropdownMenuItem(
+                                            value: 'accepted',
+                                            child: Text(
+                                              'مقبول',
+                                              style: TextStyle(
+                                                color: _getStatusColor('accepted'),
+                                                fontFamily: 'Cairo',
+                                              ),
+                                            ),
+                                          ),
+                                          DropdownMenuItem(
+                                            value: 'rejected',
+                                            child: Text(
+                                              'مرفوض',
+                                              style: TextStyle(
+                                                color: _getStatusColor('rejected'),
+                                                fontFamily: 'Cairo',
+                                              ),
+                                            ),
+                                          ),
+                                          DropdownMenuItem(
+                                            value: 'need_details',
+                                            child: Text(
+                                              'يحتاج تفاصيل',
+                                              style: TextStyle(
+                                                color: _getStatusColor('need_details'),
+                                                fontFamily: 'Cairo',
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                        onChanged: (String? newValue) {
+                                          if (newValue != null) {
+                                            _updateApplicationStatus(applications[index].id, newValue);
+                                          }
+                                        },
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 10),
-                              Expanded(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Text(
-                                                  application['jobSeekerName'] ?? 'مجهول',
-                                                  style: const TextStyle(
-                                                    color: Color(0xFF1A1D1E),
-                                                    fontSize: 14,
-                                                    fontFamily: 'Cairo',
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Container(
-                                                  width: 33,
-                                                  height: 33,
-                                                  decoration: const ShapeDecoration(
-                                                    color: Color(0xFFF3F3F3),
-                                                    shape: OvalBorder(),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 16),
-                                            Text(
-                                              jobTitle,
-                                              style: const TextStyle(
-                                                color: Color(0xFF6A6A6A),
-                                                fontSize: 12,
-                                                fontFamily: 'Cairo',
-                                                fontWeight: FontWeight.w400,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        TextButton(
-                                          onPressed: () => _createOrNavigateToChat(
-                                            context,
-                                            application['userId'],
-                                            application['jobSeekerName'] ?? 'مجهول',
-                                            jobId,
-                                          ),
-                                          style: TextButton.styleFrom(
-                                            backgroundColor: const Color(0xFFF3F3F3),
-                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(6),
-                                            ),
-                                          ),
-                                          child: const Text(
-                                            'مراسلة',
-                                            style: TextStyle(
-                                              color: Color(0xFF4CA6A8),
-                                              fontSize: 14,
-                                              fontFamily: 'Cairo',
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => ApplicantProfilePage(
-                                                  applicantId: application['userId'],
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          style: TextButton.styleFrom(
-                                            backgroundColor: const Color(0xFF4CA6A8),
-                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(6),
-                                            ),
-                                          ),
-                                          child: const Text(
-                                            'السيرة الذاتية',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 14,
-                                              fontFamily: 'Cairo',
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                            );
+                          },
                         );
                       },
-                    );
-                  },
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ],

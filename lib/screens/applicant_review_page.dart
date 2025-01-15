@@ -5,6 +5,20 @@ import '../widgets/custom_app_bar.dart';
 class ApplicantReviewPage extends StatelessWidget {
   const ApplicantReviewPage({super.key});
 
+  Future<void> _updateApplicationStatus(String applicationId, String newStatus) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('applications')
+          .doc(applicationId)
+          .update({
+        'status': newStatus,
+        'reviewedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error updating application status: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,19 +53,19 @@ class ApplicantReviewPage extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),
                       ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
-                        title: Text(
-                          data['jobTitle'] ?? 'وظيفة غير معروفة',
-                          style: const TextStyle(
-                            fontFamily: 'Cairo',
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
+                            Text(
+                              data['jobTitle'] ?? 'وظيفة غير معروفة',
+                              style: const TextStyle(
+                                fontFamily: 'Cairo',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
                             const SizedBox(height: 8),
                             Text(
                               'تاريخ التقديم: ${_formatDate(data['appliedAt'])}',
@@ -60,17 +74,83 @@ class ApplicantReviewPage extends StatelessWidget {
                                 fontSize: 14,
                               ),
                             ),
-                            Text(
-                              'الحالة: ${_getStatusText(data['status'])}',
-                              style: TextStyle(
-                                fontFamily: 'Cairo',
-                                fontSize: 14,
-                                color: _getStatusColor(data['status']),
-                              ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                DropdownButton<String>(
+                                  value: data['status'] ?? 'pending',
+                                  items: [
+                                    DropdownMenuItem(
+                                      value: 'pending',
+                                      child: Text(
+                                        'قيد المراجعة',
+                                        style: TextStyle(
+                                          color: _getStatusColor('pending'),
+                                          fontFamily: 'Cairo',
+                                        ),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'accepted',
+                                      child: Text(
+                                        'مقبول',
+                                        style: TextStyle(
+                                          color: _getStatusColor('accepted'),
+                                          fontFamily: 'Cairo',
+                                        ),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'rejected',
+                                      child: Text(
+                                        'مرفوض',
+                                        style: TextStyle(
+                                          color: _getStatusColor('rejected'),
+                                          fontFamily: 'Cairo',
+                                        ),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'need_details',
+                                      child: Text(
+                                        'يحتاج تفاصيل',
+                                        style: TextStyle(
+                                          color: _getStatusColor('need_details'),
+                                          fontFamily: 'Cairo',
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  onChanged: (String? newValue) {
+                                    if (newValue != null) {
+                                      _updateApplicationStatus(application.id, newValue);
+                                    }
+                                  },
+                                ),
+                                TextButton(
+                                  onPressed: () => _viewApplicationDetails(context, application.id),
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: const Color(0xFF4CA6A8),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'عرض التفاصيل',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontFamily: 'Cairo',
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        onTap: () => _viewApplicationDetails(context, application.id),
                       ),
                     );
                   },
@@ -92,19 +172,6 @@ class ApplicantReviewPage extends StatelessWidget {
     return 'غير متوفر';
   }
 
-  String _getStatusText(String? status) {
-    switch (status) {
-      case 'pending':
-        return 'قيد المراجعة';
-      case 'accepted':
-        return 'مقبول';
-      case 'rejected':
-        return 'مرفوض';
-      default:
-        return 'غير معروف';
-    }
-  }
-
   Color _getStatusColor(String? status) {
     switch (status) {
       case 'pending':
@@ -113,13 +180,14 @@ class ApplicantReviewPage extends StatelessWidget {
         return Colors.green;
       case 'rejected':
         return Colors.red;
+      case 'need_details':
+        return Colors.blue;
       default:
         return Colors.grey;
     }
   }
 
   void _viewApplicationDetails(BuildContext context, String applicationId) {
-    // Navigate to application details page
     Navigator.pushNamed(
       context,
       '/application-details',
