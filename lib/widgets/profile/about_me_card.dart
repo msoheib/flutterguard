@@ -2,19 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class AboutMeCard extends StatefulWidget {
-  const AboutMeCard({super.key});
+  final bool isEditable;
+
+  const AboutMeCard({
+    super.key,
+    required this.isEditable,
+  });
 
   @override
-  State<AboutMeCard> createState() => _AboutMeCardState();
+  _AboutMeCardState createState() => _AboutMeCardState();
 }
 
 class _AboutMeCardState extends State<AboutMeCard> {
-  String _aboutMeText = '';
-
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(30.5, 24, 30.5, 0),
+      margin: const EdgeInsets.fromLTRB(30.5, 16, 30.5, 0),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -25,14 +28,13 @@ class _AboutMeCardState extends State<AboutMeCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap: _editAboutMe,
-                child: SvgPicture.asset(
-                  'assets/media/icons/show_more.svg',
-                  width: 24,
-                  height: 24,
+              if (widget.isEditable)
+                GestureDetector(
+                  onTap: () {
+                    // Add edit functionality here
+                  },
+                  child: SvgPicture.asset('assets/media/icons/show_more.svg', width: 24, height: 24),
                 ),
-              ),
               Row(
                 children: [
                   const Text(
@@ -45,62 +47,16 @@ class _AboutMeCardState extends State<AboutMeCard> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  SvgPicture.asset(
-                    'assets/media/icons/about_me.svg',
-                    width: 24,
-                    height: 24,
-                  ),
+                  SvgPicture.asset('assets/media/icons/about.svg', width: 24, height: 24),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 10),
-          Text(
-            _aboutMeText,
-            textAlign: TextAlign.right,
-            style: const TextStyle(
-              color: Color(0xFF1A1D1E),
-              fontSize: 14,
-              fontFamily: 'Cairo',
-            ),
-          ),
+          const Divider(),
+          const SizedBox(height: 10),
         ],
       ),
-    );
-  }
-
-  void _editAboutMe() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Edit About Me'),
-          content: TextField(
-            onChanged: (value) {
-              setState(() {
-                _aboutMeText = value;
-              });
-            },
-            controller: TextEditingController(text: _aboutMeText),
-            decoration: const InputDecoration(hintText: "Enter your about me text"),
-            textAlign: TextAlign.right,
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('CANCEL'),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        );
-      },
     );
   }
 }

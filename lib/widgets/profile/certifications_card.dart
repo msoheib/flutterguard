@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class CertificationsCard extends StatefulWidget {
-  const CertificationsCard({super.key});
+  final bool isEditable;
+
+  const CertificationsCard({
+    super.key,
+    required this.isEditable,
+  });
 
   @override
   _CertificationsCardState createState() => _CertificationsCardState();
@@ -25,14 +30,15 @@ class _CertificationsCardState extends State<CertificationsCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap: _addCertification,
-                child: SvgPicture.asset('assets/media/icons/show_more.svg', width: 24, height: 24),
-              ),
+              if (widget.isEditable)
+                GestureDetector(
+                  onTap: _addCertification,
+                  child: SvgPicture.asset('assets/media/icons/show_more.svg', width: 24, height: 24),
+                ),
               Row(
                 children: [
                   const Text(
-                    'الشها��ات',
+                    'الشهات',
                     style: TextStyle(
                       color: Color(0xFF1A1D1E),
                       fontSize: 14,

@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class ProfileCard extends StatelessWidget {
-  const ProfileCard({super.key});
+  final bool isEditable;
+
+  const ProfileCard({
+    super.key,
+    required this.isEditable,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -36,19 +41,20 @@ class ProfileCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(4),
+          if (isEditable) const SizedBox(height: 8),
+          if (isEditable)
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: SvgPicture.asset(
+                'assets/media/icons/edit.svg',
+                width: 24,
+                height: 24,
+              ),
             ),
-            child: SvgPicture.asset(
-              'assets/media/icons/edit.svg',
-              width: 24,
-              height: 24,
-            ),
-          ),
           const SizedBox(height: 16),
         ],
       ),

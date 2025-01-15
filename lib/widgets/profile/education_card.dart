@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class EducationCard extends StatefulWidget {
-  const EducationCard({super.key});
+  final bool isEditable;
+
+  const EducationCard({
+    super.key,
+    required this.isEditable,
+  });
 
   @override
   _EducationCardState createState() => _EducationCardState();
@@ -25,10 +30,11 @@ class _EducationCardState extends State<EducationCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap: _addEducation,
-                child: SvgPicture.asset('assets/media/icons/show_more.svg', width: 24, height: 24),
-              ),
+              if (widget.isEditable)
+                GestureDetector(
+                  onTap: _addEducation,
+                  child: SvgPicture.asset('assets/media/icons/show_more.svg', width: 24, height: 24),
+                ),
               Row(
                 children: [
                   const Text(
