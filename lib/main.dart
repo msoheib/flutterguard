@@ -212,6 +212,7 @@ class MyApp extends StatelessWidget {
         '/jobseeker/applications': (context) => const ApplicationsHistoryPage(),
         '/jobseeker/chat': (context) => const ChatPage(),
         '/jobseeker/profile': (context) => const ProfileCvScreen(),
+        '/jobseeker/settings': (context) => const SettingsPage(),
         '/company/home': (context) => const CompanyHomePage(),
         '/company/applications': (context) => const CompanyApplicationsPage(),
         '/company/chat': (context) => const CompanyChatPage(),
