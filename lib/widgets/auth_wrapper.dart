@@ -1,10 +1,11 @@
 // widgets/auth_wrapper.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../pages/job_seeker_home_page.dart';
 import '../pages/login_page.dart';
-import '../pages/company/company_home_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../pages/job_seeker_home_page.dart';
+import '../pages/company/company_home_page.dart';
+import '../pages/admin/admin_dashboard_page.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
@@ -32,14 +33,24 @@ class AuthWrapper extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
 
-            final userData = userSnapshot.data?.data() as Map<String, dynamic>?;
-            final userType = userData?['role'] as String?;
-
-            if (userType == 'company') {
-              return const CompanyHomePage();
+            if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+              return const LoginPage();
             }
 
-            return const JobSeekerHomePage();
+            final userData = userSnapshot.data!.data() as Map<String, dynamic>;
+            final userRole = userData['role'] as String?;
+
+            switch (userRole) {
+              case 'admin':
+              case 'superadmin':
+                return const AdminDashboardPage();
+              case 'company':
+                return const CompanyHomePage();
+              case 'jobseeker':
+                return const JobSeekerHomePage();
+              default:
+                return const LoginPage();
+            }
           },
         );
       },

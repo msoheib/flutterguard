@@ -3,90 +3,91 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  final bool showBackButton;
+  final bool showLogo;
+  final bool showNotification;
+  final VoidCallback? onNotificationTap;
   final VoidCallback? onBackPressed;
-  
+
   const CustomAppBar({
-    super.key, 
+    super.key,
     required this.title,
+    this.showBackButton = false,
+    this.showLogo = false,
+    this.showNotification = false,
+    this.onNotificationTap,
     this.onBackPressed,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 375,
+      width: double.infinity,
       height: 125,
-      child: Stack(
-        children: [
-          // Background container
-          Positioned(
-            left: 0,
-            top: 0,
-            child: Container(
-              width: 375,
-              height: 125,
-              decoration: const ShapeDecoration(
-                color: Color(0xFFF5F5F5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(18),
-                    bottomRight: Radius.circular(18),
+      decoration: const ShapeDecoration(
+        color: Color(0xFFF5F5F5),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(18),
+            bottomRight: Radius.circular(18),
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (showBackButton)
+                IconButton(
+                  onPressed: onBackPressed ?? () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back_ios),
+                )
+              else if (showNotification)
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CA6A8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  child: IconButton(
+                    onPressed: onNotificationTap,
+                    icon: const Icon(
+                      Icons.notifications_outlined,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+              else
+                const SizedBox(width: 44),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Color(0xFF6A6A6A),
+                  fontSize: 20,
+                  fontFamily: 'Cairo',
+                  fontWeight: FontWeight.w400,
                 ),
               ),
-            ),
-          ),
-          // Content container
-          Positioned(
-            left: 24,
-            top: 60,
-            right: 24,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const SizedBox(width: 44), // Left spacer
-                Text(
-                  title,
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(
-                    color: Color(0xFF6A6A6A),
-                    fontSize: 20,
-                    fontFamily: 'Cairo',
-                    fontWeight: FontWeight.w600,
-                    height: 1.40,
-                  ),
-                ),
-                if (onBackPressed != null)
-                  GestureDetector(
-                    onTap: onBackPressed,
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      padding: const EdgeInsets.all(10),
-                      decoration: ShapeDecoration(
-                        color: const Color(0xFF4CA6A8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Transform(
-                        alignment: Alignment.center,
-                        transform: Matrix4.identity()..scale(-1.0, 1.0, 1.0),
-                        child: SvgPicture.asset(
-                          'assets/media/icons/back.svg',
-                          width: 24,
-                          height: 24,
-                          color: Colors.white,
-                        ),
-                      ),
+              if (showLogo)
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(35),
+                    image: const DecorationImage(
+                      image: AssetImage('assets/media/icons/avatar.png'),
+                      fit: BoxFit.cover,
                     ),
-                  )
-                else
-                  const SizedBox(width: 44), // Right spacer when no back button
-              ],
-            ),
+                  ),
+                )
+              else
+                const SizedBox(width: 44),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

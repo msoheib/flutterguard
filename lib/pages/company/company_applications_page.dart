@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../widgets/company_route_wrapper.dart';
-import '../../models/job_application.dart';
-import '../../screens/applicant_profile_page.dart';
 import '../../widgets/custom_app_bar.dart';
 import './company_applicants_page.dart';
 
@@ -20,7 +18,7 @@ class CompanyApplicationsPage extends StatelessWidget {
         backgroundColor: const Color(0xFFFBFBFB),
         body: Column(
           children: [
-            const CustomAppBar(
+            CustomAppBar(
               title: 'المتقدمين',
             ),
             Expanded(

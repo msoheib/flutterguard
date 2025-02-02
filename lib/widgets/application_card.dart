@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/application.dart';
-import '../theme/app_theme.dart';
 import '../pages/application_details_page.dart';
 
 class ApplicationCard extends StatelessWidget {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class UserNavbar extends StatefulWidget {
-  const UserNavbar({Key? key}) : super(key: key);
+  const UserNavbar({super.key});
 
   @override
   _UserNavbarState createState() => _UserNavbarState();

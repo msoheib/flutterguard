@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../screens/applicant_profile_page.dart';
 import '../../widgets/custom_app_bar.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/chat_service.dart';
 import '../../models/chat.dart';
@@ -18,32 +17,72 @@ class JobApplicantsPage extends StatelessWidget {
     required this.jobTitle,
   });
 
-  Future<void> _createOrNavigateToChat(BuildContext context, String applicantId, String applicantName, String jobId) async {
+  Future<void> _createOrNavigateToChat(BuildContext context, String applicantId, String applicantName) async {
     final companyId = FirebaseAuth.instance.currentUser?.uid;
     if (companyId == null) return;
 
-    final chatService = ChatService();
-    final chatId = await chatService.createChat(applicantId, companyId, jobId);
-    
-    if (!context.mounted) return;
-    
-    final chatDoc = await FirebaseFirestore.instance
-        .collection('chats')
-        .doc(chatId)
-        .get();
-        
-    final chat = Chat.fromFirestore(chatDoc);
+    try {
+      // Create a valid document ID by combining IDs
+      final chatId = '${companyId}_${applicantId}';
+      
+      // Reference to chats collection with valid document ID
+      final chatRef = FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId);
 
-    if (!context.mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChatDetailPage(
-          chat: chat,
-          isCompany: true,
-        ),
-      ),
-    );
+      // Check if chat exists
+      final chatDoc = await chatRef.get();
+      if (!chatDoc.exists) {
+        // Get company info first
+        final companyDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(companyId)
+            .get();
+        
+        final companyData = companyDoc.data();
+        final companyInfo = companyData?['companyInfo'] as Map<String, dynamic>?;
+        final companyName = companyInfo?['name'] ?? 'مجهول';
+
+        // Get job seeker info
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(applicantId)
+            .get();
+        
+        final userData = userDoc.data();
+        final profile = userData?['profile'] as Map<String, dynamic>?;
+        final personalInfo = profile?['personalInfo'] as Map<String, dynamic>?;
+        final jobSeekerName = personalInfo?['fullName'] ?? 'مجهول';
+        final jobSeekerPhone = userData?['phoneNumber'] ?? '';
+
+        // Create new chat document with all user info
+        await chatRef.set({
+          'participants': [companyId, applicantId],
+          'lastMessage': '',
+          'lastMessageTime': FieldValue.serverTimestamp(),
+          'createdAt': FieldValue.serverTimestamp(),
+          'companyId': companyId,
+          'jobSeekerId': applicantId,
+          'jobSeekerName': jobSeekerName,
+          'jobSeekerPhone': jobSeekerPhone,
+          'companyName': companyName,
+        });
+      }
+
+      // Navigate to chat detail
+      if (!context.mounted) return;
+      Navigator.pushNamed(
+        context,
+        '/chat_detail',
+        arguments: {
+          'chatId': chatId,
+          'otherUserId': applicantId,
+          'otherUserName': applicantName,
+        },
+      );
+    } catch (e) {
+      print('Error creating chat: $e');
+    }
   }
 
   Future<void> _updateApplicationStatus(String applicationId, String newStatus) async {
@@ -238,7 +277,6 @@ class JobApplicantsPage extends StatelessWidget {
                                               context,
                                               application['userId'],
                                               application['jobSeekerName'] ?? 'مجهول',
-                                              jobId,
                                             ),
                                             style: TextButton.styleFrom(
                                               backgroundColor: const Color(0xFFF3F3F3),

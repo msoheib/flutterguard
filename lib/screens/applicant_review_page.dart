@@ -24,7 +24,9 @@ class ApplicantReviewPage extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
-          const CustomAppBar(title: 'التقديمات'),
+          CustomAppBar(
+            title: 'التقديمات',
+          ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance.collection('applications').snapshots(),

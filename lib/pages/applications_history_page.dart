@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/job_application_service.dart';
-import '../models/application.dart';
 import '../widgets/user_route_wrapper.dart';
 import '../widgets/job_listing_card.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

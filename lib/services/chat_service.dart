@@ -1,25 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/chat.dart';
 import '../models/message.dart';
+import '../services/validation_service.dart';
 
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
+  ChatService();
 
   // Create or get existing chat
-  Future<String> createChat(String jobSeekerId, String companyId, String jobId) async {
-    // Check if chat already exists
-    final querySnapshot = await _firestore.collection('chats')
-        .where('jobSeekerId', isEqualTo: jobSeekerId)
-        .where('companyId', isEqualTo: companyId)
-        .where('jobId', isEqualTo: jobId)
-        .get();
-
-    if (querySnapshot.docs.isNotEmpty) {
-      return querySnapshot.docs.first.id;
+  Future<String> createChat({
+    required String jobSeekerId,
+    required String companyId,
+    required String jobId,
+  }) async {
+    // Validate input parameters
+    if (jobSeekerId.isEmpty || companyId.isEmpty || jobId.isEmpty) {
+      throw Exception('Invalid chat parameters');
     }
 
-    // Create new chat
-    final chatRef = await _firestore.collection('chats').add({
+    final chatData = {
       'jobSeekerId': jobSeekerId,
       'companyId': companyId,
       'jobId': jobId,
@@ -27,35 +27,60 @@ class ChatService {
       'lastMessage': '',
       'unreadCompany': false,
       'unreadJobSeeker': false,
-    });
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
 
-    return chatRef.id;
+    // Validate chat data before creation
+    if (!ValidationService.isValidChat(chatData)) {
+      throw Exception('Invalid chat data structure');
+    }
+
+    try {
+      final chatRef = await _firestore.collection('chats').add(chatData);
+      return chatRef.id;
+    } catch (e) {
+      throw Exception('Failed to create chat: $e');
+    }
   }
 
   // Send message
   Future<void> sendMessage(String chatId, String senderId, String content) async {
-    final batch = _firestore.batch();
-    
-    // Add message
-    final messageRef = _firestore.collection('messages').doc();
-    batch.set(messageRef, {
+    if (chatId.isEmpty || senderId.isEmpty) {
+      throw Exception('Invalid chat or sender ID');
+    }
+
+    final messageData = {
       'chatId': chatId,
       'senderId': senderId,
       'content': content,
       'timestamp': FieldValue.serverTimestamp(),
       'isRead': false,
-    });
+    };
 
-    // Update chat
-    final chatRef = _firestore.collection('chats').doc(chatId);
-    batch.update(chatRef, {
-      'lastMessage': content,
-      'lastMessageTime': FieldValue.serverTimestamp(),
-      'unreadCompany': true,
-      'unreadJobSeeker': true,
-    });
+    if (!ValidationService.isValidMessage(messageData)) {
+      throw Exception('Invalid message data structure');
+    }
 
-    await batch.commit();
+    final batch = _firestore.batch();
+    
+    try {
+      // Add message
+      final messageRef = _firestore.collection('messages').doc();
+      batch.set(messageRef, messageData);
+
+      // Update chat
+      final chatRef = _firestore.collection('chats').doc(chatId);
+      batch.update(chatRef, {
+        'lastMessage': content,
+        'lastMessageTime': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      await batch.commit();
+    } catch (e) {
+      throw Exception('Failed to send message: $e');
+    }
   }
 
   // Get chats for user

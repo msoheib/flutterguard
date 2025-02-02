@@ -20,7 +20,9 @@ class CompanyChatPage extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              const CustomAppBar(title: 'المحادثات'),
+              CustomAppBar(
+                title: 'المحادثات',
+              ),
               
               // Chat List
               Expanded(
@@ -28,8 +30,6 @@ class CompanyChatPage extends StatelessWidget {
                   stream: FirebaseFirestore.instance
                       .collection('chats')
                       .where('companyId', isEqualTo: currentUserId)
-                      .where('lastMessage', isNotEqualTo: '')
-                      .orderBy('lastMessage')
                       .orderBy('lastMessageTime', descending: true)
                       .snapshots(),
                   builder: (context, snapshot) {
@@ -67,87 +67,127 @@ class CompanyChatPage extends StatelessWidget {
                       );
                     }
 
-                    return ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: chats.length,
-                      itemBuilder: (context, index) {
-                        final chatDoc = chats[index];
-                        final chat = Chat.fromFirestore(chatDoc);
-                        
-                        return FutureBuilder<DocumentSnapshot>(
-                          future: FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(chat.jobSeekerId)
-                              .get(),
-                          builder: (context, userSnapshot) {
-                            String userName = 'مجهول';
-                            if (userSnapshot.hasData && userSnapshot.data!.exists) {
-                              final data = userSnapshot.data!.data() as Map<String, dynamic>?;
-                              userName = data?['name'] ?? 'مجهول';
-                            }
-                            
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0x1A000000),
-                                    blurRadius: 8,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.all(16),
-                                title: Text(
-                                  userName,
-                                  style: const TextStyle(
-                                    color: Color(0xFF1A1D1E),
-                                    fontSize: 16,
-                                    fontFamily: 'Cairo',
-                                    fontWeight: FontWeight.w600,
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: ListView.separated(
+                        itemCount: chats.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 16),
+                        itemBuilder: (context, index) {
+                          final chatDoc = chats[index];
+                          Chat? chat;
+                          try {
+                            chat = Chat.fromFirestore(chatDoc);
+                          } catch (e) {
+                            print('Error parsing chat: $e');
+                            return const SizedBox();
+                          }
+                          final currentChat = chat;
+                          
+                          return FutureBuilder<DocumentSnapshot>(
+                            future: FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(currentChat.jobSeekerId)
+                                .get(),
+                            builder: (context, userSnapshot) {
+                              if (currentChat.jobSeekerId == null || 
+                                  currentChat.jobSeekerId!.isEmpty) {
+                                return const SizedBox();
+                              }
+
+                              String userName = '';
+                              if (userSnapshot.hasData && userSnapshot.data!.exists) {
+                                final data = userSnapshot.data!.data() as Map<String, dynamic>?;
+                                // First try to get fullName from profile.personalInfo
+                                final profile = data?['profile'] as Map<String, dynamic>?;
+                                final personalInfo = profile?['personalInfo'] as Map<String, dynamic>?;
+                                userName = personalInfo?['fullName'] ?? data?['phoneNumber'] ?? 'مجهول';
+                              } else if (userSnapshot.connectionState == ConnectionState.waiting) {
+                                userName = 'جاري التحميل...';
+                              } else {
+                                userName = 'مجهول';
+                              }
+                              
+                              return GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ChatDetailPage(
+                                      chat: currentChat,
+                                      isCompany: true,
+                                    ),
                                   ),
                                 ),
-                                subtitle: chat.lastMessage.isNotEmpty
-                                    ? Text(
-                                        chat.lastMessage,
-                                        style: const TextStyle(
-                                          color: Color(0xFF6A6A6A),
-                                          fontSize: 14,
-                                          fontFamily: 'Cairo',
+                                child: Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    image: currentChat.unreadCompany ? const DecorationImage(
+                                      image: AssetImage('assets/media/images/stripe_pattern.png'),
+                                      repeat: ImageRepeat.repeat,
+                                      fit: BoxFit.cover,
+                                    ) : null,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(
+                                      children: [
+                                        if (currentChat.unreadCompany)
+                                          Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFF4CA6A8),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                        const Spacer(),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              currentChat.jobSeekerName ?? currentChat.jobSeekerPhone ?? 'مجهول',
+                                              style: const TextStyle(
+                                                color: Color(0xFF1A1D1E),
+                                                fontSize: 14,
+                                                fontFamily: 'Cairo',
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            Text(
+                                              currentChat.lastMessage?.isNotEmpty == true ? currentChat.lastMessage! : 'مرحبا بك',
+                                              style: const TextStyle(
+                                                color: Color(0xFF6A6A6A),
+                                                fontSize: 12,
+                                                fontFamily: 'Cairo',
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      )
-                                    : null,
-                                trailing: chat.unreadCompany
-                                    ? Container(
-                                        width: 8,
-                                        height: 8,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFF4CA6A8),
-                                          shape: BoxShape.circle,
+                                        const SizedBox(width: 12),
+                                        Container(
+                                          width: 40,
+                                          height: 40,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFFE8ECF4),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.person,
+                                            color: Color(0xFF8391A1),
+                                            size: 24,
+                                          ),
                                         ),
-                                      )
-                                    : null,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ChatDetailPage(
-                                        chat: chat,
-                                        isCompany: true,
-                                      ),
+                                      ],
                                     ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
-                        );
-                      },
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
                     );
                   },
                 ),

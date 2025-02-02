@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../widgets/job_listing_card.dart';
 import '../services/job_service.dart';
 import '../models/job_post.dart';
-import '../screens/job_detail_page.dart';
 
 class JobListings extends StatefulWidget {
   const JobListings({super.key});

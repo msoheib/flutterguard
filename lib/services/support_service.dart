@@ -13,10 +13,19 @@ class SupportService {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
 
+    final userDoc = await _firestore.collection('users').doc(userId).get();
+    final userData = userDoc.data() ?? {};
+
     // Create a support chat
-    final chatRef = await _firestore.collection('support_chats').add({
+    final chatRef = await _firestore.collection('supportChats').add({
       'userId': userId,
+      'userName': userData['name'] ?? 'مستخدم',
+      'userEmail': userData['email'] ?? '',
       'status': 'pending',
+      'lastMessage': '',
+      'lastMessageTime': FieldValue.serverTimestamp(),
+      'unreadAdmin': true,
+      'unreadUser': false,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
@@ -25,7 +34,10 @@ class SupportService {
     Navigator.pushNamed(
       NavigationService.navigatorKey.currentContext!,
       '/support-chat',
-      arguments: chatRef.id,
+      arguments: {
+        'chatId': chatRef.id,
+        'userId': userId,
+      },
     );
   }
 

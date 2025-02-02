@@ -1,9 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../pages/job_seeker_home_page.dart';
-import '../../pages/applications_history_page.dart';
-import '../../pages/chat_page.dart';
-import '../../pages/settings_page.dart';
-import '../../theme/app_theme.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class UserNavBar extends StatelessWidget {

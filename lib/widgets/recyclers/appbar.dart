@@ -13,7 +13,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: 375,
       height: 125,
       child: Stack(

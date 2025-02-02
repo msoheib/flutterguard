@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../models/chat.dart';
 import '../models/message.dart';
 import '../services/chat_service.dart';
@@ -29,7 +28,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     super.initState();
     // Mark messages as read when opening chat
     _chatService.markAsRead(widget.chat.id, 
-      widget.isCompany ? widget.chat.companyId : widget.chat.jobSeekerId, 
+      widget.isCompany ? widget.chat.companyId ?? '' : widget.chat.jobSeekerId ?? '', 
       widget.isCompany);
   }
 
@@ -42,14 +41,29 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   Future<void> _sendMessage() async {
     if (_messageController.text.trim().isEmpty || _isSending) return;
 
+    final senderId = widget.isCompany ? 
+      widget.chat.companyId : 
+      widget.chat.jobSeekerId;
+
+    if (senderId == null || senderId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('خطأ في معرف المستخدم')),
+      );
+      return;
+    }
+
     setState(() => _isSending = true);
     try {
       await _chatService.sendMessage(
         widget.chat.id,
-        widget.isCompany ? widget.chat.companyId : widget.chat.jobSeekerId,
+        senderId,
         _messageController.text.trim(),
       );
       _messageController.clear();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('فشل في إرسال الرسالة')),
+      );
     } finally {
       setState(() => _isSending = false);
     }
@@ -100,9 +114,12 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
                       final message = messages[index];
-                      final isMe = widget.isCompany 
-                        ? message.senderId == widget.chat.companyId
-                        : message.senderId == widget.chat.jobSeekerId;
+                      final senderId = widget.isCompany ? 
+                        (widget.chat.companyId ?? '') : 
+                        (widget.chat.jobSeekerId ?? '');
+                      final isMe = widget.isCompany ? 
+                        message.senderId == (widget.chat.companyId ?? '') :
+                        message.senderId == (widget.chat.jobSeekerId ?? '');
 
                       return _MessageBubble(
                         message: message,

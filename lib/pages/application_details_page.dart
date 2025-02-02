@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/application.dart';
-import '../theme/app_theme.dart';
 
 class ApplicationDetailsPage extends StatelessWidget {
   final Application application;

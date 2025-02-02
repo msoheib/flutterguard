@@ -1,24 +1,40 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isValidChat(data) {
+      return data.jobSeekerId is string &&
+             data.companyId is string &&
+             data.jobId is string &&
+             data.lastMessageTime is timestamp &&
+             data.unreadCompany is bool &&
+             data.unreadJobSeeker is bool;
+    }
+
+    function isValidMessage(data) {
+      return data.chatId is string &&
+             data.senderId is string &&
+             data.content is string &&
+             data.timestamp is timestamp &&
+             data.isRead is bool;
+    }
+
     // Chat rules
     match /chats/{chatId} {
-      allow read: if request.auth != null && (
-        resource.data.jobSeekerId == request.auth.uid ||
-        resource.data.companyId == request.auth.uid
-      );
-      allow create: if request.auth != null;
-      allow update: if request.auth != null && (
-        resource.data.jobSeekerId == request.auth.uid ||
-        resource.data.companyId == request.auth.uid
-      );
+      allow create: if request.auth != null &&
+                      isValidChat(request.resource.data);
+      allow update: if request.auth != null &&
+                      (resource.data.jobSeekerId == request.auth.uid ||
+                       resource.data.companyId == request.auth.uid);
+      allow read: if request.auth != null &&
+                    (resource.data.jobSeekerId == request.auth.uid ||
+                     resource.data.companyId == request.auth.uid);
     }
     
     // Messages rules
     match /messages/{messageId} {
-      allow read: if request.auth != null && get(/databases/$(database)/documents/chats/$(resource.data.chatId)).data.jobSeekerId == request.auth.uid ||
-                                           get(/databases/$(database)/documents/chats/$(resource.data.chatId)).data.companyId == request.auth.uid;
-      allow create: if request.auth != null;
+      allow create: if request.auth != null &&
+                      isValidMessage(request.resource.data);
+      allow read: if request.auth != null;
     }
 
     // For testing only - remove in production
