@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/custom_app_bar.dart';
-import '../../widgets/custom_bottom_navigation_bar.dart';
+import 'components/admin_bottom_nav.dart';
 import '../../services/admin_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -13,7 +13,6 @@ class AdminChatPage extends StatefulWidget {
 
 class _AdminChatPageState extends State<AdminChatPage> {
   final AdminService _adminService = AdminService();
-  int _selectedNavIndex = 2;
 
   @override
   Widget build(BuildContext context) {
@@ -83,45 +82,9 @@ class _AdminChatPageState extends State<AdminChatPage> {
           );
         },
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        currentIndex: _selectedNavIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedNavIndex = index;
-          });
-          switch (index) {
-            case 0:
-              Navigator.pushReplacementNamed(context, '/admin/dashboard');
-              break;
-            case 1:
-              Navigator.pushReplacementNamed(context, '/admin/applications');
-              break;
-            case 2:
-              // Already on chat
-              break;
-            case 3:
-              Navigator.pushReplacementNamed(context, '/admin/profile');
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'لوحة التحكم',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.work),
-            label: 'الطلبات',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'المحادثات',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'الملف',
-          ),
-        ],
+      bottomNavigationBar: AdminBottomNav(
+        currentIndex: 2,
+        onTap: (index) => AdminBottomNav.handleNavigation(context, index),
       ),
     );
   }

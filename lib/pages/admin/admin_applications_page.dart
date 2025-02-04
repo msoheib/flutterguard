@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/custom_app_bar.dart';
-import '../../widgets/custom_bottom_navigation_bar.dart';
+import 'components/admin_bottom_nav.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AdminApplicationsPage extends StatefulWidget {
@@ -11,8 +11,6 @@ class AdminApplicationsPage extends StatefulWidget {
 }
 
 class _AdminApplicationsPageState extends State<AdminApplicationsPage> {
-  int _selectedNavIndex = 1;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,45 +70,9 @@ class _AdminApplicationsPageState extends State<AdminApplicationsPage> {
           );
         },
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        currentIndex: _selectedNavIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedNavIndex = index;
-          });
-          switch (index) {
-            case 0:
-              Navigator.pushReplacementNamed(context, '/admin/dashboard');
-              break;
-            case 1:
-              // Already on applications
-              break;
-            case 2:
-              Navigator.pushReplacementNamed(context, '/admin/chat');
-              break;
-            case 3:
-              Navigator.pushReplacementNamed(context, '/admin/profile');
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'لوحة التحكم',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.work),
-            label: 'الطلبات',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'المحادثات',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'الملف',
-          ),
-        ],
+      bottomNavigationBar: AdminBottomNav(
+        currentIndex: 1,
+        onTap: (index) => AdminBottomNav.handleNavigation(context, index),
       ),
     );
   }

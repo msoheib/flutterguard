@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../services/admin_service.dart';
 import '../../widgets/custom_app_bar.dart';
+import 'components/admin_bottom_nav.dart';
+import '../../services/admin_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../widgets/custom_bottom_navigation_bar.dart';
 import 'admin_support_page.dart';
 
 class AdminDashboardPage extends StatefulWidget {
@@ -211,22 +211,26 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     children: [
                       _isLoading
                           ? const Center(child: CircularProgressIndicator())
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          : Column(
                               children: [
                                 _buildStatCard(
-                                  'الوظائف',
+                                  'أجمالي الوظائف المنشورة',
                                   _stats['totalJobs']?.toString() ?? '0',
+                                  const Color(0xFF4CA6A8),
                                   Icons.work,
                                 ),
+                                const SizedBox(height: 16),
                                 _buildStatCard(
-                                  'الشركات',
+                                  'عدد الشركات',
                                   _stats['totalCompanies']?.toString() ?? '0',
+                                  const Color(0xFF4CA6A8),
                                   Icons.business,
                                 ),
+                                const SizedBox(height: 16),
                                 _buildStatCard(
-                                  'المستخدمين',
+                                  'عدد المستخدمين',
                                   _stats['totalUsers']?.toString() ?? '0',
+                                  const Color(0xFF4CA6A8),
                                   Icons.people,
                                 ),
                               ],
@@ -241,15 +245,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
-                        'طلبات الانضمام',
-                        style: TextStyle(
-                          color: Color(0xFF1A1D1E),
-                          fontSize: 14,
-                          fontFamily: 'Cairo',
-                          fontWeight: FontWeight.w700,
+                      const Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          'شركات تطلب التسجيل',
+                          style: TextStyle(
+                            color: Color(0xFF1A1D1E),
+                            fontSize: 14,
+                            fontFamily: 'Cairo',
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -466,7 +473,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       const Text(
                         'طلبات تسجيل الشركات',
@@ -474,6 +481,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1A1D1E),
+                          fontFamily: 'Cairo',
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -558,39 +566,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           ),
         ],
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(
+      bottomNavigationBar: AdminBottomNav(
         currentIndex: 0,
-        onTap: (index) {
-          if (index == 3) { // Support tab
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const AdminSupportPage()),
-            );
-          }
-          // Handle other navigation items
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home, size: 20),
-            label: 'الرئيسة',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people, size: 20),
-            label: 'المستخدمين',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.business, size: 20),
-            label: 'الشركات',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.support_agent, size: 20),
-            label: 'الدعم الفني',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings, size: 20),
-            label: 'الأعدادت',
-          ),
-        ],
+        onTap: (index) => AdminBottomNav.handleNavigation(context, index),
       ),
     );
   }
@@ -607,40 +585,70 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon) {
+  Widget _buildStatCard(String title, String value, Color backgroundColor, IconData icon) {
     return Container(
-      width: 100,
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: Color(0x07000000),
+            blurRadius: 12,
+            offset: Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(icon, color: Theme.of(context).primaryColor),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          // Left side - Icon
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: 24,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
+          // Right side - Text
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    value,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 34,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    title,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.w500,
+                      height: 1,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
