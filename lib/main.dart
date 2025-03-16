@@ -27,7 +27,8 @@ import 'pages/admin/support_chat_page.dart';
 import 'pages/admin/admin_applications_page.dart';
 import 'pages/admin/admin_chat_page.dart';
 import 'pages/admin/admin_profile_page.dart';
-import 'package:flutter/foundation.dart';
+import 'pages/admin/admin_users_page.dart';
+import 'pages/admin/admin_settings_page.dart';
 import 'dart:async';
 
 void main() {
@@ -240,6 +241,8 @@ class MyApp extends StatelessWidget {
             userId: args['userId']!,
           );
         },
+        '/admin/users': (context) => const AdminUsersPage(),
+        '/admin/settings': (context) => const AdminSettingsPage(),
       },
     );
   }

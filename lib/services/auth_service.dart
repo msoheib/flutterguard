@@ -2,6 +2,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math';
+import '../constants/company_status.dart';
+import '../models/company.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -88,5 +90,26 @@ class AuthService {
   // Sign Out
   Future<void> signOut() async {
     await _auth.signOut();
+  }
+
+  Future<void> registerCompany(Company company) async {
+    try {
+      final companyData = {
+        ...company.toMap(),
+        'status': CompanyStatus.UNDER_REVIEW,
+        'createdAt': FieldValue.serverTimestamp(),
+        'statusChangedAt': FieldValue.serverTimestamp(),
+        'statusHistory': [
+          {
+            'status': CompanyStatus.UNDER_REVIEW,
+            'timestamp': FieldValue.serverTimestamp(),
+          }
+        ],
+      };
+
+      await _firestore.collection('companies').doc().set(companyData);
+    } catch (e) {
+      throw Exception('Failed to register company: $e');
+    }
   }
 }

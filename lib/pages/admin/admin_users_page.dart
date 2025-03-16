@@ -4,15 +4,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'admin_support_page.dart';
 import 'admin_navbar.dart';
 
-class AdminApplicationsPage extends StatefulWidget {
-  const AdminApplicationsPage({super.key});
+class AdminUsersPage extends StatefulWidget {
+  const AdminUsersPage({super.key});
 
   @override
-  State<AdminApplicationsPage> createState() => _AdminApplicationsPageState();
+  State<AdminUsersPage> createState() => _AdminUsersPageState();
 }
 
-class _AdminApplicationsPageState extends State<AdminApplicationsPage> {
-  int _selectedNavIndex = 2;
+class _AdminUsersPageState extends State<AdminUsersPage> {
+  int _selectedNavIndex = 1; // Users tab
 
   @override
   Widget build(BuildContext context) {
@@ -21,13 +21,14 @@ class _AdminApplicationsPageState extends State<AdminApplicationsPage> {
       appBar: const PreferredSize(
         preferredSize: Size.fromHeight(kToolbarHeight),
         child: CustomAppBar(
-          title: 'طلبات التوظيف',
+          title: 'المستخدمين',
           showBackButton: false,
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('applications')
+            .collection('users')
+            .where('role', isEqualTo: 'jobseeker')
             .orderBy('createdAt', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
@@ -39,33 +40,27 @@ class _AdminApplicationsPageState extends State<AdminApplicationsPage> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final applications = snapshot.data?.docs ?? [];
+          final users = snapshot.data?.docs ?? [];
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: applications.length,
+            itemCount: users.length,
             itemBuilder: (context, index) {
-              final application = applications[index].data() as Map<String, dynamic>;
+              final user = users[index].data() as Map<String, dynamic>;
               
               return Card(
                 child: ListTile(
-                  title: Text(application['jobTitle'] ?? 'وظيفة'),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(application['companyName'] ?? 'شركة'),
-                      Text(application['applicantName'] ?? 'متقدم'),
-                    ],
-                  ),
+                  title: Text(user['name'] ?? 'مستخدم'),
+                  subtitle: Text(user['email'] ?? ''),
                   trailing: Text(
-                    application['status'] ?? 'معلق',
+                    user['status'] ?? 'نشط',
                     style: TextStyle(
-                      color: _getStatusColor(application['status']),
+                      color: user['status'] == 'banned' ? Colors.red : Colors.green,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   onTap: () {
-                    // Navigate to application details
+                    // Navigate to user details
                   },
                 ),
               );
@@ -84,10 +79,10 @@ class _AdminApplicationsPageState extends State<AdminApplicationsPage> {
               Navigator.pushReplacementNamed(context, '/admin/dashboard');
               break;
             case 1:
-              Navigator.pushReplacementNamed(context, '/admin/users');
+              // Already on users page
               break;
             case 2:
-              // Already on applications/companies page
+              Navigator.pushReplacementNamed(context, '/admin/applications');
               break;
             case 3:
               Navigator.push(
@@ -102,18 +97,5 @@ class _AdminApplicationsPageState extends State<AdminApplicationsPage> {
         },
       ),
     );
-  }
-
-  Color _getStatusColor(String? status) {
-    switch (status) {
-      case 'accepted':
-        return Colors.green;
-      case 'rejected':
-        return Colors.red;
-      case 'pending':
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
   }
 } 

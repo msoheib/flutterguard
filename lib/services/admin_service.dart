@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/admin_user.dart';
+import '../constants/company_status.dart';
 
 class AdminService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -230,53 +231,47 @@ class AdminService {
   // Stream pending company approvals
   Stream<List<Map<String, dynamic>>> getPendingCompanies() {
     return _firestore
-        .collection('users')
-        .where('role', isEqualTo: 'company')
-        .where('isApproved', isEqualTo: false)
+        .collection('companies')
+        .where('status', isEqualTo: CompanyStatus.UNDER_REVIEW)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs.map((doc) {
-            final data = doc.data();
-            return {
-              'id': doc.id,
-              'name': data['name'] ?? '',
-              'email': data['email'] ?? '',
-              'phoneNumber': data['phoneNumber'] ?? '',
-              'createdAt': data['createdAt'],
-            };
-          }).toList();
-        });
-  }
-
-  // Approve a company
-  Future<void> approveCompany(String companyId) async {
-    await _firestore.collection('users').doc(companyId).update({
-      'isApproved': true,
-      'approvedAt': FieldValue.serverTimestamp(),
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          ...data,
+        };
+      }).toList();
     });
   }
 
-  // Reject a company
-  Future<void> rejectCompany(String companyId) async {
-    // First get the company data
-    final companyDoc = await _firestore.collection('users').doc(companyId).get();
-    final batch = _firestore.batch();
+  Future<void> updateCompanyStatus(String companyId, String status, {String? reason}) async {
+    final statusUpdate = {
+      'status': status,
+      'statusChangedAt': FieldValue.serverTimestamp(),
+      if (reason != null) 'statusReason': reason,
+      'statusHistory': FieldValue.arrayUnion([
+        {
+          'status': status,
+          'timestamp': FieldValue.serverTimestamp(),
+          if (reason != null) 'reason': reason,
+        }
+      ]),
+    };
 
-    // Delete any jobs posted by this company
-    final jobsQuery = await _firestore
-        .collection('jobs')
-        .where('companyId', isEqualTo: companyId)
-        .get();
-    
-    for (var doc in jobsQuery.docs) {
-      batch.delete(doc.reference);
-    }
+    await _firestore.collection('companies').doc(companyId).update(statusUpdate);
+  }
 
-    // Delete the company user document
-    batch.delete(companyDoc.reference);
+  Future<void> approveCompany(String companyId) async {
+    await updateCompanyStatus(companyId, CompanyStatus.APPROVED);
+  }
 
-    // Commit the batch
-    await batch.commit();
+  Future<void> rejectCompany(String companyId, {String? reason}) async {
+    await updateCompanyStatus(companyId, CompanyStatus.REJECTED, reason: reason);
+  }
+
+  Future<void> sendBackForAmendments(String companyId, String reason) async {
+    await updateCompanyStatus(companyId, CompanyStatus.SENT_BACK, reason: reason);
   }
 
   // Get available admins for support chat assignment

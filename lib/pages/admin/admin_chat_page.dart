@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/custom_app_bar.dart';
-import '../../widgets/custom_bottom_navigation_bar.dart';
+import 'admin_navbar.dart';
 import '../../services/admin_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -83,45 +83,27 @@ class _AdminChatPageState extends State<AdminChatPage> {
           );
         },
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        currentIndex: _selectedNavIndex,
+      bottomNavigationBar: AdminNavbar(
+        currentIndex: 3, // Support/chat tab
         onTap: (index) {
-          setState(() {
-            _selectedNavIndex = index;
-          });
           switch (index) {
             case 0:
               Navigator.pushReplacementNamed(context, '/admin/dashboard');
               break;
             case 1:
-              Navigator.pushReplacementNamed(context, '/admin/applications');
+              Navigator.pushReplacementNamed(context, '/admin/users');
               break;
             case 2:
-              // Already on chat
+              Navigator.pushReplacementNamed(context, '/admin/applications');
               break;
             case 3:
-              Navigator.pushReplacementNamed(context, '/admin/profile');
+              // Already on chat/support page
+              break;
+            case 4:
+              Navigator.pushReplacementNamed(context, '/admin/settings');
               break;
           }
         },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'لوحة التحكم',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.work),
-            label: 'الطلبات',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'المحادثات',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'الملف',
-          ),
-        ],
       ),
     );
   }

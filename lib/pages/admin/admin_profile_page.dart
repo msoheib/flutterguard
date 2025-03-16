@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../widgets/custom_app_bar.dart';
-import '../../widgets/custom_bottom_navigation_bar.dart';
+import 'admin_navbar.dart';
 import '../../services/admin_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'admin_support_page.dart';
 
 class AdminProfilePage extends StatefulWidget {
   const AdminProfilePage({super.key});
@@ -116,45 +117,30 @@ class _AdminProfilePageState extends State<AdminProfilePage> {
           );
         },
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        currentIndex: _selectedNavIndex,
+      bottomNavigationBar: AdminNavbar(
+        currentIndex: 4, // Profile/settings tab
         onTap: (index) {
-          setState(() {
-            _selectedNavIndex = index;
-          });
           switch (index) {
             case 0:
               Navigator.pushReplacementNamed(context, '/admin/dashboard');
               break;
             case 1:
-              Navigator.pushReplacementNamed(context, '/admin/applications');
+              Navigator.pushReplacementNamed(context, '/admin/users');
               break;
             case 2:
-              Navigator.pushReplacementNamed(context, '/admin/chat');
+              Navigator.pushReplacementNamed(context, '/admin/applications');
               break;
             case 3:
-              // Already on profile
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AdminSupportPage()),
+              );
+              break;
+            case 4:
+              // Already on profile/settings page
               break;
           }
         },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'لوحة التحكم',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.work),
-            label: 'الطلبات',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'المحادثات',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'الملف',
-          ),
-        ],
       ),
     );
   }

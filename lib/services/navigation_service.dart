@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../pages/chat_page.dart';
 import '../pages/company/company_applicants_page.dart';
 import '../pages/company/company_settings_page.dart';
 import '../widgets/company_route_wrapper.dart';
@@ -9,7 +8,6 @@ import '../screens/create_job_page.dart';
 import '../pages/chat_list_page.dart';
 import '../pages/admin/admin_support_page.dart';
 import '../pages/admin/support_chat_page.dart';
-import '../screens/chat_detail_page.dart';
 
 class NavigationService {
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

@@ -3,9 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../screens/applicant_profile_page.dart';
 import '../../widgets/custom_app_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../services/chat_service.dart';
-import '../../models/chat.dart';
-import '../../screens/chat_detail_page.dart';
 
 class JobApplicantsPage extends StatelessWidget {
   final String jobId;
@@ -23,7 +20,7 @@ class JobApplicantsPage extends StatelessWidget {
 
     try {
       // Create a valid document ID by combining IDs
-      final chatId = '${companyId}_${applicantId}';
+      final chatId = '${companyId}_$applicantId';
       
       // Reference to chats collection with valid document ID
       final chatRef = FirebaseFirestore.instance
