@@ -4,6 +4,8 @@ import '../../services/auth_service.dart';
 import '../../widgets/company_route_wrapper.dart';
 import 'company_profile_page.dart';
 import '../../services/support_service.dart';
+import '../../components/navigation/app_bars/notification_app_bar.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class CompanySettingsPage extends StatefulWidget {
   const CompanySettingsPage({super.key});
@@ -27,128 +29,104 @@ class _CompanySettingsPageState extends State<CompanySettingsPage> {
       child: Scaffold(
         backgroundColor: const Color(0xFFFBFBFB),
         body: SafeArea(
-          child: Stack(
+          child: Column(
             children: [
-              // Header Section
-              Positioned(
-                left: 0,
-                top: 0,
-                child: Container(
-                  width: MediaQuery.of(context).size.width,
-                  height: 125,
-                  decoration: const ShapeDecoration(
-                    color: Color(0xFFF5F5F5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(18),
-                        bottomRight: Radius.circular(18),
-                      ),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor: const Color(0xFF4CA6A8),
-                          child: const Icon(
-                            Icons.business,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                        ),
-                        const Text(
-                          'أسم التطبيق',
-                          style: TextStyle(
-                            color: Color(0xFF6A6A6A),
-                            fontSize: 20,
-                            fontFamily: 'Cairo',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              // Header using NotificationAppBar
+              NotificationAppBar(
+                title: 'أسم التطبيق',
+                useFilterIcon: false,
+                notificationIconPath: 'assets/media/icons/bell.svg',
+                onNotificationPressed: () {
+                  // Notification functionality here
+                },
+                avatarUrl: 'assets/media/icons/avatar.png',
+                isAvatarAsset: true,
+                onAvatarPressed: () => Navigator.pushNamed(context, '/profile'),
               ),
               
-              // Main Content - Settings Items
-              Positioned(
-                left: 28,
-                top: 141,
-                child: SizedBox(
-                  width: 319,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Company Profile button
-                      _buildSettingItem(
-                        title: 'الملف الشخصي للشركة',
-                        icon: Icons.person_outline,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const CompanyProfilePage(),
+              // Main content
+              Expanded(
+                child: Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: SingleChildScrollView(
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 400),
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 20),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Company Profile button
+                            _buildSettingItem(
+                              title: 'الملف الشخصي للشركة',
+                              iconPath: 'assets/media/icons/about_me.svg',
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const CompanyProfilePage(),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
+                            
+                            const SizedBox(height: 11),
+                            
+                            // Customer support button
+                            _buildSettingItem(
+                              title: 'خدمة العملاء',
+                              iconPath: 'assets/media/icons/support.svg',
+                              onTap: () async {
+                                try {
+                                  await _supportService.startLiveChat();
+                                } catch (e) {
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('حدث خطأ: $e'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                            ),
+                            
+                            const SizedBox(height: 11),
+                            
+                            // Logout button
+                            _buildSettingItem(
+                              title: 'تسجيل الخروج',
+                              iconPath: 'assets/media/icons/logout.svg',
+                              onTap: () async {
+                                try {
+                                  await AuthService().signOut();
+                                  if (context.mounted) {
+                                    Navigator.pushNamedAndRemoveUntil(
+                                      context,
+                                      '/login',
+                                      (route) => false,
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('حدث خطأ أثناء تسجيل الخروج'),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                            ),
+                          ],
+                        ),
                       ),
-                      
-                      const SizedBox(height: 11),
-                      
-                      // Customer support button
-                      _buildSettingItem(
-                        title: 'خدمة العملاء',
-                        icon: Icons.headset_mic_outlined,
-                        onTap: () async {
-                          try {
-                            await _supportService.startLiveChat();
-                          } catch (e) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('حدث خطأ: $e'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          }
-                        },
-                      ),
-                      
-                      const SizedBox(height: 11),
-                      
-                      // Logout button
-                      _buildSettingItem(
-                        title: 'تسجيل الخروج',
-                        icon: Icons.logout_outlined,
-                        onTap: () async {
-                          try {
-                            await AuthService().signOut();
-                            if (context.mounted) {
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                '/login',
-                                (route) => false,
-                              );
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('حدث خطأ أثناء تسجيل الخروج'),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -162,7 +140,7 @@ class _CompanySettingsPageState extends State<CompanySettingsPage> {
   Widget _buildSettingItem({
     required String title,
     required VoidCallback onTap,
-    required IconData icon,
+    required String iconPath,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -175,40 +153,33 @@ class _CompanySettingsPageState extends State<CompanySettingsPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          shadows: const [
+            BoxShadow(
+              color: Color(0x0D000000),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+              spreadRadius: 0,
+            )
+          ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
+        child: Row(
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFF6A6A6A),
-                    fontSize: 14,
-                    fontFamily: 'Cairo',
-                    fontWeight: FontWeight.w500,
-                    height: 1,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  width: 24,
-                  height: 24,
-                  clipBehavior: Clip.antiAlias,
-                  decoration: const BoxDecoration(),
-                  child: Icon(
-                    icon,
-                    size: 20,
-                    color: const Color(0xFF4CA6A8),
-                  ),
-                ),
-              ],
+            SvgPicture.asset(
+              iconPath,
+              width: 24,
+              height: 24,
+              color: const Color(0xFF6A6A6A),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Color(0xFF6A6A6A),
+                fontSize: 14,
+                fontFamily: 'Cairo',
+                fontWeight: FontWeight.w500,
+                height: 1,
+              ),
             ),
           ],
         ),

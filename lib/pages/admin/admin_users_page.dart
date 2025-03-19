@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../components/navigation/app_bars/custom_app_bar.dart';
+import '../../components/navigation/app_bars/notification_app_bar.dart';
 import '../../components/navigation/nav_bars/admin_nav_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'admin_support_page.dart';
@@ -12,18 +13,16 @@ class AdminUsersPage extends StatefulWidget {
 }
 
 class _AdminUsersPageState extends State<AdminUsersPage> {
-  int _selectedNavIndex = 1; // Users tab
+  // Visual index 1 corresponds to Users in the RTL navbar
+  int _selectedNavIndex = 1; 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
-      appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight),
-        child: CustomAppBar(
-          title: 'المستخدمين',
-          showBackButton: false,
-        ),
+      appBar: const NotificationAppBar(
+        title: 'المستخدمين',
+        notificationCount: 0,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -69,28 +68,12 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
         },
       ),
       bottomNavigationBar: AdminNavBar(
-        currentIndex: 1,
+        currentIndex: _selectedNavIndex,
         onTap: (index) {
+          // The AdminNavBar will handle navigation directly
           setState(() {
             _selectedNavIndex = index;
           });
-          switch (index) {
-            case 4:
-              Navigator.pushReplacementNamed(context, '/admin/dashboard');
-              break;
-            case 3:
-              Navigator.pushReplacementNamed(context, '/admin/applications');
-              break;
-            case 2:
-              Navigator.pushReplacementNamed(context, '/admin/chat');
-              break;
-            case 1:
-              // Already on users page
-              break;
-            case 0:
-              Navigator.pushReplacementNamed(context, '/admin/settings');
-              break;
-          }
         },
       ),
     );

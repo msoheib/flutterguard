@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../components/navigation/app_bars/custom_app_bar.dart';
+import '../../components/navigation/app_bars/notification_app_bar.dart';
 import '../../components/navigation/nav_bars/admin_nav_bar.dart';
 import 'admin_support_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,18 +13,16 @@ class AdminSettingsPage extends StatefulWidget {
 }
 
 class _AdminSettingsPageState extends State<AdminSettingsPage> {
-  int _selectedNavIndex = 4; // Settings tab
+  // Visual index 4 corresponds to Settings in the RTL navbar
+  int _selectedNavIndex = 4;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBFB),
-      appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight),
-        child: CustomAppBar(
-          title: 'الإعدادات',
-          showBackButton: false,
-        ),
+      appBar: const NotificationAppBar(
+        title: 'الإعدادات',
+        notificationCount: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -95,28 +94,12 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
         ),
       ),
       bottomNavigationBar: AdminNavBar(
-        currentIndex: 0,
+        currentIndex: _selectedNavIndex,
         onTap: (index) {
+          // The AdminNavBar will handle navigation directly
           setState(() {
             _selectedNavIndex = index;
           });
-          switch (index) {
-            case 4:
-              Navigator.pushReplacementNamed(context, '/admin/dashboard');
-              break;
-            case 3:
-              Navigator.pushReplacementNamed(context, '/admin/applications');
-              break;
-            case 2:
-              Navigator.pushReplacementNamed(context, '/admin/chat');
-              break;
-            case 1:
-              Navigator.pushReplacementNamed(context, '/admin/users');
-              break;
-            case 0:
-              // Already on settings page
-              break;
-          }
         },
       ),
     );

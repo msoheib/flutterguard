@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../services/auth_service.dart';
-import '../../components/navigation/nav_bars/company_nav_bar.dart';
+import '../../widgets/company_route_wrapper.dart';
+import '../../components/navigation/app_bars/notification_app_bar.dart';
 import 'company_profile_page.dart';
 
 class CompanySettingsPage extends StatelessWidget {
@@ -9,95 +10,112 @@ class CompanySettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFB),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Main content
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Container(
-                  width: 319,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 20),
-                      
-                      // Company Profile button
-                      _buildSettingItem(
-                        title: 'الملف الشخصي للشركة',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const CompanyProfilePage(),
+    return CompanyRouteWrapper(
+      currentIndex: 3,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFFBFBFB),
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Header using NotificationAppBar
+              NotificationAppBar(
+                title: 'أسم التطبيق',
+                useFilterIcon: false,
+                notificationIconPath: 'assets/media/icons/bell.svg',
+                onNotificationPressed: () {
+                  // Notification functionality here
+                },
+                avatarUrl: 'assets/media/icons/avatar.png',
+                isAvatarAsset: true,
+                onAvatarPressed: () => Navigator.pushNamed(context, '/profile'),
+              ),
+              
+              // Main content
+              Expanded(
+                child: Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: SingleChildScrollView(
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 400),
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 20),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Personal Profile button
+                            _buildSettingItemFigma(
+                              title: 'الملف الشخصي للشركة',
+                              iconPath: 'assets/media/icons/about_me.svg',
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const CompanyProfilePage(),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
+                            
+                            const SizedBox(height: 11),
+                            
+                            // Customer Service button
+                            _buildSettingItemFigma(
+                              title: 'خدمة العملاء',
+                              iconPath: 'assets/media/icons/support.svg',
+                              onTap: () {
+                                Navigator.pushNamed(context, '/company/support');
+                              },
+                            ),
+                            
+                            const SizedBox(height: 11),
+                            
+                            // Logout button
+                            _buildSettingItemFigma(
+                              title: 'تسجيل الخروج',
+                              iconPath: 'assets/media/icons/logout.svg',
+                              onTap: () async {
+                                try {
+                                  await AuthService().signOut();
+                                  if (context.mounted) {
+                                    Navigator.pushNamedAndRemoveUntil(
+                                      context,
+                                      '/login',
+                                      (route) => false,
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('حدث خطأ أثناء تسجيل الخروج: ${e.toString()}'),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                            ),
+                          ],
+                        ),
                       ),
-                      
-                      const SizedBox(height: 11),
-                      
-                      // Customer support button
-                      _buildSettingItem(
-                        title: 'خدمة العملاء',
-                        onTap: () {
-                          Navigator.pushNamed(context, '/company/support');
-                        },
-                      ),
-                      
-                      const SizedBox(height: 11),
-                      
-                      // Logout button
-                      _buildSettingItem(
-                        title: 'تسجيل الخروج',
-                        onTap: () async {
-                          try {
-                            await AuthService().signOut();
-                            if (context.mounted) {
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                '/login',
-                                (route) => false,
-                              );
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('حدث خطأ أثناء تسجيل الخروج'),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-
-            // Bottom Navigation
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: CompanyNavBar(currentIndex: 3, onTap: (index) {}),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSettingItem({
+  Widget _buildSettingItemFigma({
     required String title,
     required VoidCallback onTap,
+    required String iconPath,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -110,37 +128,32 @@ class CompanySettingsPage extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          shadows: const [
+            BoxShadow(
+              color: Color(0x0D000000),
+              blurRadius: 4,
+              offset: Offset(0, 2),
+              spreadRadius: 0,
+            )
+          ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
+        child: Row(
           children: [
-            Container(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 24,
-                    height: 24,
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(),
-                    child: Stack(),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Color(0xFF6A6A6A),
-                      fontSize: 14,
-                      fontFamily: 'Cairo',
-                      fontWeight: FontWeight.w500,
-                      height: 1,
-                    ),
-                  ),
-                ],
+            SvgPicture.asset(
+              iconPath,
+              width: 24,
+              height: 24,
+              color: const Color(0xFF6A6A6A),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Color(0xFF6A6A6A),
+                fontSize: 14,
+                fontFamily: 'Cairo',
+                fontWeight: FontWeight.w500,
+                height: 1,
               ),
             ),
           ],

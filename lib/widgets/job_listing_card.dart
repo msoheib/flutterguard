@@ -182,30 +182,6 @@ class _JobListingCardState extends State<JobListingCard> {
                         children: [
                           Row(
                             children: [
-                              if (widget.onCancelPressed != null)
-                                GestureDetector(
-                                  onTap: widget.onCancelPressed,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    margin: const EdgeInsets.only(right: 8),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFFFEEEE),
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
-                                          blurRadius: 2,
-                                          offset: const Offset(0, 1),
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.close,
-                                      color: Color(0xFFE53935),
-                                      size: 16,
-                                    ),
-                                  ),
-                                ),
                               GestureDetector(
                                 onTap: _isLoading ? null : _toggleFavorite,
                                 child: _isLoading 
@@ -229,6 +205,34 @@ class _JobListingCardState extends State<JobListingCard> {
                                       )
                                     : const SizedBox(width: 24, height: 24),
                               ),
+                              if (widget.onCancelPressed != null)
+                                GestureDetector(
+                                  onTap: widget.onCancelPressed,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    margin: const EdgeInsets.only(left: 8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFEEEE),
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 2,
+                                          offset: const Offset(0, 1),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Text(
+                                      'إلغاء',
+                                      style: TextStyle(
+                                        color: Color(0xFFE53935),
+                                        fontSize: 12,
+                                        fontFamily: 'Cairo',
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                           const SizedBox(height: 25),

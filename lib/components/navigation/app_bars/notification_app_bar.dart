@@ -36,6 +36,7 @@ class NotificationAppBar extends StatelessWidget implements PreferredSizeWidget 
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       height: 125,
       decoration: BoxDecoration(
         color: backgroundColor ?? const Color(0xFFF5F5F5),
@@ -43,10 +44,17 @@ class NotificationAppBar extends StatelessWidget implements PreferredSizeWidget 
           bottomLeft: Radius.circular(18),
           bottomRight: Radius.circular(18),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 32.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -55,10 +63,10 @@ class NotificationAppBar extends StatelessWidget implements PreferredSizeWidget 
               GestureDetector(
                 onTap: onAvatarPressed,
                 child: leadingWidget ?? Container(
-                  width: 44,
-                  height: 44,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(35),
+                    borderRadius: BorderRadius.circular(24),
                     color: Colors.grey[300],
                     image: avatarUrl != null 
                       ? DecorationImage(
@@ -69,22 +77,28 @@ class NotificationAppBar extends StatelessWidget implements PreferredSizeWidget 
                         )
                       : null,
                   ),
-                  child: avatarUrl == null ? Icon(
+                  child: avatarUrl == null ? const Icon(
                     Icons.person,
-                    color: Colors.grey[600],
+                    color: Color(0xFF6A6A6A),
                     size: 24,
                   ) : null,
                 ),
               ),
 
               // App title in center
-              Text(
-                title,
-                style: TextStyle(
-                  color: titleColor ?? const Color(0xFF6A6A6A),
-                  fontSize: 20,
-                  fontFamily: 'Cairo',
-                  fontWeight: FontWeight.w400,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: titleColor ?? const Color(0xFF6A6A6A),
+                      fontSize: 22,
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
 
@@ -92,8 +106,8 @@ class NotificationAppBar extends StatelessWidget implements PreferredSizeWidget 
               GestureDetector(
                 onTap: onNotificationPressed,
                 child: Container(
-                  width: 44,
-                  height: 44,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
                     color: const Color(0xFF4CA6A8),
                     borderRadius: BorderRadius.circular(12),
@@ -107,8 +121,8 @@ class NotificationAppBar extends StatelessWidget implements PreferredSizeWidget 
                           useFilterIcon 
                               ? 'assets/media/icons/filter.svg'
                               : notificationIconPath!,
-                          width: 24,
-                          height: 24,
+                          width: 28,
+                          height: 28,
                           colorFilter: const ColorFilter.mode(
                             Colors.white,
                             BlendMode.srcIn,
@@ -119,24 +133,24 @@ class NotificationAppBar extends StatelessWidget implements PreferredSizeWidget 
                       // Notification badge
                       if (notificationCount > 0)
                         Positioned(
-                          top: -4,
-                          right: -4,
+                          top: -6,
+                          right: -6,
                           child: Container(
-                            padding: const EdgeInsets.all(3),
+                            padding: const EdgeInsets.all(4),
                             decoration: const BoxDecoration(
                               color: Colors.red,
                               shape: BoxShape.circle,
                             ),
                             constraints: const BoxConstraints(
-                              minWidth: 14,
-                              minHeight: 14,
+                              minWidth: 18,
+                              minHeight: 18,
                             ),
                             child: Center(
                               child: Text(
                                 notificationCount > 9 ? '9+' : notificationCount.toString(),
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 8,
+                                  fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
