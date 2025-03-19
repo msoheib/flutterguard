@@ -20,6 +20,7 @@ class JobDetailPage extends StatefulWidget {
 class _JobDetailPageState extends State<JobDetailPage> {
   final JobApplicationService _applicationService = JobApplicationService();
   bool _hasApplied = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -102,38 +103,129 @@ class _JobDetailPageState extends State<JobDetailPage> {
     }
   }
 
+  Future<void> _handleCancelApplication() async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'إلغاء التقديم',
+          textAlign: TextAlign.right,
+          style: TextStyle(
+            fontFamily: 'Cairo',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: const Text(
+          'هل أنت متأكد أنك تريد إلغاء تقديمك لهذه الوظيفة؟',
+          textAlign: TextAlign.right,
+          style: TextStyle(
+            fontFamily: 'Cairo',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'إلغاء',
+              style: TextStyle(
+                color: Color(0xFF6A6A6A),
+                fontFamily: 'Cairo',
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _processCancelApplication();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: const Color(0xFFE53935),
+            ),
+            child: const Text(
+              'تأكيد الإلغاء',
+              style: TextStyle(fontFamily: 'Cairo'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _processCancelApplication() async {
+    if (_isLoading) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      await _applicationService.cancelApplication(widget.job.id);
+      
+      setState(() {
+        _hasApplied = false;
+        _isLoading = false;
+      });
+      
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم إلغاء تقديمك بنجاح'),
+          backgroundColor: Color(0xFF4CA6A8),
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('حدث خطأ أثناء إلغاء التقديم: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
-        child: Column(
-          children: [
-            CustomAppBar(
-              title: 'تفاصيل الوظيفة',
-              onBackPressed: () => Navigator.pop(context),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 16),
-                      JobDetailHeader(
-                        job: widget.job,
-                        hasApplied: _hasApplied,
-                        onApply: _handleApply,
-                      ),
-                      const SizedBox(height: 16),
-                      JobDetailContent(job: widget.job),
-                    ],
+        child: _isLoading 
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFF4CA6A8)))
+            : Column(
+                children: [
+                  CustomAppBar(
+                    title: 'تفاصيل الوظيفة',
+                    onBackPressed: () => Navigator.pop(context),
                   ),
-                ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 16),
+                            JobDetailHeader(
+                              job: widget.job,
+                              hasApplied: _hasApplied,
+                              onApply: _handleApply,
+                              onCancelApplication: _handleCancelApplication,
+                            ),
+                            const SizedBox(height: 16),
+                            JobDetailContent(job: widget.job),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }

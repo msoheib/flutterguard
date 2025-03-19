@@ -28,7 +28,7 @@ class SupportPage extends StatelessWidget {
                   context: context,
                   title: 'المحادثة المباشرة',
                   subtitle: 'تحدث مع أحد ممثلي خدمة العملاء',
-                  icon: 'assets/media/icons/chat.svg',
+                  icon: 'assets/media/icons/Chat.svg',
                   onTap: () => supportService.startLiveChat(),
                 ),
                 _buildContactOption(

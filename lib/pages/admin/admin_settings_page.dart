@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../widgets/custom_app_bar.dart';
+import '../../components/navigation/app_bars/custom_app_bar.dart';
+import '../../components/navigation/nav_bars/admin_nav_bar.dart';
 import 'admin_support_page.dart';
-import 'admin_navbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AdminSettingsPage extends StatefulWidget {
@@ -47,6 +47,15 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
                 },
               ),
             ),
+            Card(
+              child: ListTile(
+                title: const Text('دعم العملاء'),
+                leading: const Icon(Icons.headset_mic_outlined),
+                onTap: () {
+                  Navigator.pushNamed(context, '/admin/support');
+                },
+              ),
+            ),
             const Spacer(),
             ElevatedButton(
               onPressed: () async {
@@ -85,29 +94,26 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
           ],
         ),
       ),
-      bottomNavigationBar: AdminNavbar(
-        currentIndex: _selectedNavIndex,
+      bottomNavigationBar: AdminNavBar(
+        currentIndex: 0,
         onTap: (index) {
           setState(() {
             _selectedNavIndex = index;
           });
           switch (index) {
-            case 0:
+            case 4:
               Navigator.pushReplacementNamed(context, '/admin/dashboard');
+              break;
+            case 3:
+              Navigator.pushReplacementNamed(context, '/admin/applications');
+              break;
+            case 2:
+              Navigator.pushReplacementNamed(context, '/admin/chat');
               break;
             case 1:
               Navigator.pushReplacementNamed(context, '/admin/users');
               break;
-            case 2:
-              Navigator.pushReplacementNamed(context, '/admin/applications');
-              break;
-            case 3:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AdminSupportPage()),
-              );
-              break;
-            case 4:
+            case 0:
               // Already on settings page
               break;
           }

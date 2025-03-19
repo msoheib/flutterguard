@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../widgets/custom_app_bar.dart';
+import '../../components/navigation/app_bars/custom_app_bar.dart';
+import '../../components/navigation/nav_bars/admin_nav_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'admin_support_page.dart';
-import 'admin_navbar.dart';
 
 class AdminApplicationsPage extends StatefulWidget {
   const AdminApplicationsPage({super.key});
@@ -73,29 +73,26 @@ class _AdminApplicationsPageState extends State<AdminApplicationsPage> {
           );
         },
       ),
-      bottomNavigationBar: AdminNavbar(
-        currentIndex: _selectedNavIndex,
+      bottomNavigationBar: AdminNavBar(
+        currentIndex: 3,
         onTap: (index) {
           setState(() {
             _selectedNavIndex = index;
           });
           switch (index) {
-            case 0:
+            case 4:
               Navigator.pushReplacementNamed(context, '/admin/dashboard');
+              break;
+            case 3:
+              // Already on applications page
+              break;
+            case 2:
+              Navigator.pushReplacementNamed(context, '/admin/chat');
               break;
             case 1:
               Navigator.pushReplacementNamed(context, '/admin/users');
               break;
-            case 2:
-              // Already on applications/companies page
-              break;
-            case 3:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AdminSupportPage()),
-              );
-              break;
-            case 4:
+            case 0:
               Navigator.pushReplacementNamed(context, '/admin/settings');
               break;
           }

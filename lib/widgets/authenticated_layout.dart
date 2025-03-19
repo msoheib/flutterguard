@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'recyclers/navbar.dart';
-import 'recyclers/company_navbar.dart';
+import '../components/navigation/nav_bars/company_nav_bar.dart';
 
 class AuthenticatedLayout extends StatelessWidget {
   final Widget child;
@@ -13,6 +12,22 @@ class AuthenticatedLayout extends StatelessWidget {
     required this.child,
     required this.currentIndex,
   });
+
+  void _handleCompanyNavigation(BuildContext context, int index) {
+    switch (index) {
+      case 1:
+        Navigator.pushReplacementNamed(context, '/company/applicants');
+        break;
+      case 2:
+        Navigator.pushReplacementNamed(context, '/company/chat');
+        break;
+      case 3:
+        Navigator.pushReplacementNamed(context, '/company/settings');
+        break;
+      default:
+        Navigator.pushReplacementNamed(context, '/company/dashboard');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,8 +51,11 @@ class AuthenticatedLayout extends StatelessWidget {
         return Scaffold(
           body: child,
           bottomNavigationBar: userType == 'company' 
-              ? CompanyNavbar(currentIndex: currentIndex)
-              : Navbar(currentIndex: currentIndex),
+              ? CompanyNavBar(
+                  currentIndex: currentIndex,
+                  onTap: (index) => _handleCompanyNavigation(context, index),
+                )
+              : null,
         );
       },
     );

@@ -234,6 +234,40 @@ class UserProfilePage extends StatelessWidget {
                     _buildMenuItem(Icons.star_outline, 'المهارات'),
                     _buildMenuItem(Icons.language, 'اللغات'),
                     _buildMenuItem(Icons.badge_outlined, 'الشهادات'),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // CV Editor Button
+                    InkWell(
+                      onTap: () => Navigator.pushNamed(context, '/jobseeker/cv'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4CA6A8),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(
+                              Icons.edit_document,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'تحرير السيرة الذاتية',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontFamily: 'Cairo',
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

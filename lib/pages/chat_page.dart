@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/user_route_wrapper.dart';
-import '../widgets/custom_app_bar.dart';
+import '../components/navigation/app_bars/custom_app_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/chat.dart';
@@ -60,11 +60,6 @@ class _ChatPageState extends State<ChatPage> {
               CustomAppBar(
                 title: 'المحادثات',
                 showBackButton: false,
-                showLogo: true,
-                showNotification: true,
-                onNotificationTap: () {
-                  // Handle notification tap
-                },
               ),
               
               // Chat List
@@ -130,89 +125,113 @@ class ChatListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ChatDetailPage(
-            chat: chat,
-            isCompany: false,
+    final hasUnread = chat.unreadJobSeeker;
+    
+    return Container(
+      width: double.infinity,
+      child: GestureDetector(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatDetailPage(
+              chat: chat,
+              isCompany: false,
+            ),
           ),
         ),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // User info section (left side)
             Container(
-              width: 40,
-              height: 40,
-              decoration: const BoxDecoration(
-                color: Color(0xFFE8ECF4),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.business,
-                color: Color(0xFF4CA6A8),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              width: 172,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    chat.companyName ?? 'مجهول',
-                    style: const TextStyle(
-                      color: Color(0xFF1A1D1E),
-                      fontSize: 14,
-                      fontFamily: 'Cairo',
-                      fontWeight: FontWeight.w500,
+                  // Avatar
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: ShapeDecoration(
+                      color: Colors.black.withOpacity(0.2),
+                      shape: const OvalBorder(),
+                    ),
+                    child: const Icon(
+                      Icons.business,
+                      color: Color(0xFF4CA6A8),
+                      size: 20,
                     ),
                   ),
-                  Text(
-                    chat.lastMessage ?? 'مرحبا بك',
-                    style: const TextStyle(
-                      color: Color(0xFF6A6A6A),
-                      fontSize: 12,
-                      fontFamily: 'Cairo',
-                      fontWeight: FontWeight.w400,
+                  const SizedBox(width: 16),
+                  // Name and message
+                  Container(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          chat.companyName ?? 'أسم المتقدم',
+                          style: const TextStyle(
+                            color: Color(0xFF1A1D1E),
+                            fontSize: 14,
+                            fontFamily: 'Cairo',
+                            fontWeight: FontWeight.w400,
+                            height: 1.71,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          chat.lastMessage ?? 'مرحبا بك',
+                          style: const TextStyle(
+                            color: Color(0xFF6A6A6A),
+                            fontSize: 12,
+                            fontFamily: 'Cairo',
+                            fontWeight: FontWeight.w500,
+                            height: 1.67,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-            if (chat.unreadJobSeeker)
-              Container(
-                width: 24,
-                height: 24,
-                decoration: const ShapeDecoration(
-                  color: Color(0xFF4CA6A8),
-                  shape: CircleBorder(),
-                ),
-                child: const Center(
-                  child: Text(
-                    '2',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontFamily: 'Cairo',
-                      fontWeight: FontWeight.w500,
-                    ),
+            
+            // Notification circle
+            Container(
+              width: 24,
+              height: 24,
+              decoration: const ShapeDecoration(
+                color: Color(0xFF4CA6A8),
+                shape: OvalBorder(),
+              ),
+            ),
+            
+            // Notification count
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: Center(
+                child: Text(
+                  '2',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontFamily: 'Cairo',
+                    fontWeight: FontWeight.w500,
+                    height: 1,
                   ),
                 ),
               ),
+            ),
           ],
         ),
       ),

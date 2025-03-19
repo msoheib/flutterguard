@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../widgets/company_route_wrapper.dart';
-import '../../widgets/custom_app_bar.dart';
+import '../../components/navigation/app_bars/notification_app_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/chat.dart';
 import '../../screens/chat_detail_page.dart';
+import '../../components/common/cards/chat_list.dart';
 
 class CompanyChatPage extends StatelessWidget {
   const CompanyChatPage({super.key});
@@ -14,14 +15,20 @@ class CompanyChatPage extends StatelessWidget {
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
     
     return CompanyRouteWrapper(
-      currentIndex: 1,  // Messages tab
+      currentIndex: 2,  // Chat tab
       child: Container(
         color: const Color(0xFFFBFBFB),
         child: SafeArea(
           child: Column(
             children: [
-              CustomAppBar(
+              NotificationAppBar(
                 title: 'المحادثات',
+                notificationCount: 0,
+                onNotificationPressed: () {
+                  // Navigate to notifications page or show notifications panel
+                  // For example:
+                  // Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationsPage()));
+                },
               ),
               
               // Chat List
@@ -67,123 +74,40 @@ class CompanyChatPage extends StatelessWidget {
                       );
                     }
 
-                    return Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: ListView.separated(
-                        itemCount: chats.length,
-                        separatorBuilder: (context, index) => const SizedBox(height: 16),
-                        itemBuilder: (context, index) {
-                          final chatDoc = chats[index];
-                          Chat? chat;
-                          try {
-                            chat = Chat.fromFirestore(chatDoc);
-                          } catch (e) {
-                            print('Error parsing chat: $e');
-                            return const SizedBox();
+                    return Padding(
+                      padding: const EdgeInsets.all(0),
+                      child: FutureBuilder<List<ChatListItem>>(
+                        future: _buildChatItems(chats),
+                        builder: (context, chatItemsSnapshot) {
+                          if (chatItemsSnapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
                           }
-                          final currentChat = chat;
                           
-                          return FutureBuilder<DocumentSnapshot>(
-                            future: FirebaseFirestore.instance
-                                .collection('users')
-                                .doc(currentChat.jobSeekerId)
-                                .get(),
-                            builder: (context, userSnapshot) {
-                              if (currentChat.jobSeekerId == null || 
-                                  currentChat.jobSeekerId!.isEmpty) {
-                                return const SizedBox();
-                              }
-
-                              String userName = '';
-                              if (userSnapshot.hasData && userSnapshot.data!.exists) {
-                                final data = userSnapshot.data!.data() as Map<String, dynamic>?;
-                                // First try to get fullName from profile.personalInfo
-                                final profile = data?['profile'] as Map<String, dynamic>?;
-                                final personalInfo = profile?['personalInfo'] as Map<String, dynamic>?;
-                                userName = personalInfo?['fullName'] ?? data?['phoneNumber'] ?? 'مجهول';
-                              } else if (userSnapshot.connectionState == ConnectionState.waiting) {
-                                userName = 'جاري التحميل...';
-                              } else {
-                                userName = 'مجهول';
-                              }
-                              
-                              return GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ChatDetailPage(
-                                      chat: currentChat,
-                                      isCompany: true,
+                          final chatItems = chatItemsSnapshot.data ?? [];
+                          
+                          return ChatList(
+                            items: chatItems,
+                            title: '', // Empty because we use AppBar title
+                            onItemTap: (item) {
+                              // Find the original chat from the chats list
+                              final index = chatItems.indexOf(item);
+                              if (index >= 0 && index < chats.length) {
+                                final chatDoc = chats[index];
+                                try {
+                                  final chat = Chat.fromFirestore(chatDoc);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ChatDetailPage(
+                                        chat: chat,
+                                        isCompany: true,
+                                      ),
                                     ),
-                                  ),
-                                ),
-                                child: Container(
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                    image: currentChat.unreadCompany ? const DecorationImage(
-                                      image: AssetImage('assets/media/images/stripe_pattern.png'),
-                                      repeat: ImageRepeat.repeat,
-                                      fit: BoxFit.cover,
-                                    ) : null,
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Row(
-                                      children: [
-                                        if (currentChat.unreadCompany)
-                                          Container(
-                                            width: 8,
-                                            height: 8,
-                                            decoration: const BoxDecoration(
-                                              color: Color(0xFF4CA6A8),
-                                              shape: BoxShape.circle,
-                                            ),
-                                          ),
-                                        const Spacer(),
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                          children: [
-                                            Text(
-                                              currentChat.jobSeekerName ?? currentChat.jobSeekerPhone ?? 'مجهول',
-                                              style: const TextStyle(
-                                                color: Color(0xFF1A1D1E),
-                                                fontSize: 14,
-                                                fontFamily: 'Cairo',
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                            Text(
-                                              currentChat.lastMessage?.isNotEmpty == true ? currentChat.lastMessage! : 'مرحبا بك',
-                                              style: const TextStyle(
-                                                color: Color(0xFF6A6A6A),
-                                                fontSize: 12,
-                                                fontFamily: 'Cairo',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Container(
-                                          width: 40,
-                                          height: 40,
-                                          decoration: const BoxDecoration(
-                                            color: Color(0xFFE8ECF4),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.person,
-                                            color: Color(0xFF8391A1),
-                                            size: 24,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
+                                  );
+                                } catch (e) {
+                                  print('Error parsing chat: $e');
+                                }
+                              }
                             },
                           );
                         },
@@ -197,5 +121,85 @@ class CompanyChatPage extends StatelessWidget {
         ),
       ),
     );
+  }
+  
+  // Helper method to build ChatListItems from Firestore docs
+  Future<List<ChatListItem>> _buildChatItems(List<QueryDocumentSnapshot> chatDocs) async {
+    final List<ChatListItem> result = [];
+    
+    for (final doc in chatDocs) {
+      try {
+        final chat = Chat.fromFirestore(doc);
+        
+        if (chat.jobSeekerId == null || chat.jobSeekerId!.isEmpty) {
+          continue;
+        }
+        
+        // For the company view, we want to show the job seeker's name
+        // First try to use the stored jobSeekerName from the chat document
+        String userName = chat.jobSeekerName ?? '';
+        String projectInfo = '';
+        
+        if (userName.isEmpty) {
+          // If jobSeekerName is not available in the chat document, fetch from user collection
+          final userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(chat.jobSeekerId)
+              .get();
+              
+          if (userDoc.exists) {
+            final data = userDoc.data() as Map<String, dynamic>?;
+            
+            // Try different paths to find the user name
+            final profile = data?['profile'] as Map<String, dynamic>?;
+            final personalInfo = profile?['personalInfo'] as Map<String, dynamic>?;
+            final fullName = personalInfo?['fullName'];
+            final name = personalInfo?['name']; 
+            final phone = data?['phoneNumber'];
+            
+            // Use the first available name field or empty string
+            userName = fullName ?? name ?? phone ?? '';
+          }
+        }
+        
+        // For project info, first try to get relevant job information
+        if (chat.jobId.isNotEmpty) {
+          try {
+            final jobDoc = await FirebaseFirestore.instance
+                .collection('jobs')
+                .doc(chat.jobId)
+                .get();
+                
+            if (jobDoc.exists) {
+              final jobData = jobDoc.data() as Map<String, dynamic>?;
+              final title = jobData?['title'];
+              final position = jobData?['position'];
+              
+              projectInfo = title ?? position ?? 'project';
+            } else {
+              projectInfo = 'project';
+            }
+          } catch (e) {
+            print('Error fetching job info: $e');
+            projectInfo = 'project';
+          }
+        } else {
+          // If no job info, use the last message as the project info
+          projectInfo = chat.lastMessage?.isNotEmpty == true 
+              ? chat.lastMessage! 
+              : 'project';
+        }
+        
+        result.add(ChatListItem(
+          name: userName,
+          projectName: projectInfo,
+          hasUnreadMessages: chat.unreadCompany,
+        ));
+      } catch (e) {
+        print('Error creating chat item: $e');
+      }
+    }
+    
+    return result;
   }
 } 

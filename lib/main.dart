@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'pages/job_seeker_home_page.dart';
 import 'pages/applications_history_page.dart';
 import 'pages/chat_list_page.dart';
 import 'pages/profile/user_profile_page.dart';
+import 'pages/cv_profile_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/company/company_home_page.dart';
 import 'pages/company/company_applications_page.dart';
@@ -29,7 +32,19 @@ import 'pages/admin/admin_chat_page.dart';
 import 'pages/admin/admin_profile_page.dart';
 import 'pages/admin/admin_users_page.dart';
 import 'pages/admin/admin_settings_page.dart';
+import 'pages/example_back_button_page.dart';
+import 'pages/notifications_page.dart';
+import 'pages/cv/work_experience_edit_page.dart';
+import 'pages/cv/skills_edit_page.dart';
+import 'pages/cv/languages_edit_page.dart';
+import 'pages/cv/personal_info_edit_page.dart';
+import 'models/profile.dart';
 import 'dart:async';
+import 'screens/chat_detail_page.dart';
+import 'models/chat.dart';
+import 'services/chat_service.dart';
+import 'services/support_service.dart';
+import 'pages/admin/admin_support_page.dart';
 
 void main() {
   runZonedGuarded(() async {
@@ -221,7 +236,9 @@ class MyApp extends StatelessWidget {
         '/jobseeker/applications': (context) => const ApplicationsHistoryPage(),
         '/jobseeker/chat': (context) => const ChatListPage(),
         '/jobseeker/profile': (context) => const UserProfilePage(),
+        '/jobseeker/cv': (context) => const CVProfilePage(),
         '/jobseeker/settings': (context) => const SettingsPage(),
+        '/notifications': (context) => const NotificationsPage(),
         '/company/home': (context) => const CompanyHomePage(),
         '/company/applications': (context) => const CompanyApplicationsPage(),
         '/company/chat': (context) => const CompanyChatPage(),
@@ -235,14 +252,115 @@ class MyApp extends StatelessWidget {
         '/admin/chat': (context) => const AdminChatPage(),
         '/admin/profile': (context) => const AdminProfilePage(),
         '/admin/support-chat': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, String>;
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
           return SupportChatPage(
-            chatId: args['chatId']!,
-            userId: args['userId']!,
+            chatId: args['chatId'] as String,
+            userId: args['userId'] as String,
           );
         },
         '/admin/users': (context) => const AdminUsersPage(),
         '/admin/settings': (context) => const AdminSettingsPage(),
+        '/admin/support': (context) => const AdminSupportPage(),
+        '/example-back-button': (context) => const ExampleBackButtonPage(),
+        '/jobseeker/cv/work-experience': (context) => const WorkExperienceEditPage(),
+        '/jobseeker/cv/skills': (context) => const SkillsEditPage(initialSkills: []),
+        '/jobseeker/cv/languages': (context) => const LanguagesEditPage(initialLanguages: []),
+        '/jobseeker/cv/personal-info': (context) {
+          // This route is meant to be used with arguments from Navigator.push
+          // Default values shown here are just placeholders
+          return PersonalInfoEditPage(
+            initialInfo: PersonalInfo(
+              name: '',
+              profession: '',
+              about: '',
+              location: '',
+              phone: '',
+            ),
+          );
+        },
+        
+        // Support chat route for both users and admins
+        '/support-chat': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          if (args is Map<String, String> && args.containsKey('chatId')) {
+            return SupportChatPage(
+              chatId: args['chatId']!,
+              userId: args['userId'] ?? FirebaseAuth.instance.currentUser?.uid ?? '',
+            );
+          }
+          return const Scaffold(
+            body: Center(child: Text('Chat not found')),
+          );
+        },
+        
+        // Support route that starts a live chat directly 
+        '/support': (context) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final supportService = SupportService();
+            supportService.startLiveChat().catchError((error) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error starting chat: $error'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              Navigator.pop(context);
+            });
+          });
+          
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        },
+        
+        '/chat_detail': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final chatId = args['chatId'] as String;
+          final otherUserId = args['otherUserId'] as String;
+          final otherUserName = args['otherUserName'] as String? ?? 'مستخدم';
+          
+          // Fetch the chat from Firestore or create a new chat object
+          return FutureBuilder<DocumentSnapshot>(
+            future: FirebaseFirestore.instance.collection('chats').doc(chatId).get(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              
+              if (snapshot.hasError) {
+                return Scaffold(
+                  body: Center(
+                    child: Text('Error loading chat: ${snapshot.error}'),
+                  ),
+                );
+              }
+              
+              if (!snapshot.hasData || !snapshot.data!.exists) {
+                return const Scaffold(
+                  body: Center(
+                    child: Text('Chat not found'),
+                  ),
+                );
+              }
+              
+              final chatData = snapshot.data!;
+              final chat = Chat.fromFirestore(chatData);
+              
+              // Determine if user is company based on current user ID
+              final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+              final isCompany = chat.companyId == currentUserId;
+              
+              return ChatDetailPage(
+                chat: chat,
+                isCompany: isCompany,
+              );
+            },
+          );
+        },
       },
     );
   }

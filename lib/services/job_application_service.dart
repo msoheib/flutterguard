@@ -72,6 +72,45 @@ class JobApplicationService {
     await batch.commit();
   }
 
+  // New method to cancel an application
+  Future<void> cancelApplication(String jobId) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) throw Exception('User not authenticated');
+
+    // Find the application document
+    final applicationSnapshot = await _firestore
+        .collection('applications')
+        .where('jobId', isEqualTo: jobId)
+        .where('userId', isEqualTo: userId)
+        .get();
+
+    if (applicationSnapshot.docs.isEmpty) {
+      throw Exception('No application found for this job');
+    }
+
+    final applicationDoc = applicationSnapshot.docs.first;
+    final batch = _firestore.batch();
+
+    // Delete the application
+    batch.delete(applicationDoc.reference);
+
+    // Decrement application count on job
+    final jobRef = _firestore.collection('jobs').doc(jobId);
+    batch.update(jobRef, {
+      'totalApplications': FieldValue.increment(-1),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    // Decrement user's application count
+    final userRef = _firestore.collection('users').doc(userId);
+    batch.update(userRef, {
+      'applicationCount': FieldValue.increment(-1),
+      'lastUpdated': FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+  }
+
   Stream<List<Application>> getUserApplications() {
     final userId = _auth.currentUser?.uid;
     if (userId == null) return Stream.value([]);

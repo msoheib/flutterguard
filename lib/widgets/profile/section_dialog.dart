@@ -15,37 +15,60 @@ class SectionDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Container(
-        padding: const EdgeInsets.all(24),
+        width: MediaQuery.of(context).size.width * 0.85,
+        padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Dialog Title
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
+                TextButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFF1A1D1E),
-                    fontSize: 16,
-                    fontFamily: 'Cairo',
-                    fontWeight: FontWeight.w600,
+                  child: const Text(
+                    'إلغاء',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-                if (onSave != null)
-                  TextButton(
-                    onPressed: onSave,
-                    child: const Text('حفظ'),
+                Expanded(
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
+                ),
+                TextButton(
+                  onPressed: onSave,
+                  child: const Text(
+                    'حفظ',
+                    style: TextStyle(
+                      color: Color(0xFF4CA6A8),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 24),
-            child,
+            const Divider(),
+            const SizedBox(height: 16),
+            
+            // Dialog Content
+            SingleChildScrollView(
+              child: child,
+            ),
+            
+            const SizedBox(height: 16),
           ],
         ),
       ),

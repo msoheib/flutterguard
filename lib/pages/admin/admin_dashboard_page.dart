@@ -3,7 +3,7 @@ import '../../services/admin_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'admin_support_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'admin_navbar.dart';
+import '../../components/navigation/nav_bars/admin_nav_bar.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -511,26 +511,23 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           ),
         ],
       ),
-      bottomNavigationBar: AdminNavbar(
-        currentIndex: 0,
+      bottomNavigationBar: AdminNavBar(
+        currentIndex: 4,
         onTap: (index) {
           switch (index) {
-            case 0:
+            case 4:
               // Already on dashboard
+              break;
+            case 3:
+              Navigator.pushReplacementNamed(context, '/admin/applications');
+              break;
+            case 2:
+              Navigator.pushReplacementNamed(context, '/admin/chat');
               break;
             case 1:
               Navigator.pushReplacementNamed(context, '/admin/users');
               break;
-            case 2:
-              Navigator.pushReplacementNamed(context, '/admin/companies');
-              break;
-            case 3:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AdminSupportPage()),
-              );
-              break;
-            case 4:
+            case 0:
               Navigator.pushReplacementNamed(context, '/admin/settings');
               break;
           }

@@ -22,7 +22,7 @@ class AppHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 125,
+      height: 145,
       decoration: const BoxDecoration(
         color: Color(0xFFF5F5F5),
         borderRadius: BorderRadius.only(
@@ -32,7 +32,7 @@ class AppHeader extends StatelessWidget {
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.only(top: 12, left: 24, right: 24),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -43,17 +43,18 @@ class AppHeader extends StatelessWidget {
                   child: Container(
                     width: 44,
                     height: 44,
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: actionButtonColor,
+                      color: const Color(0xFF4CA6A8),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Transform.rotate(
-                      angle: 3.14159, // 180 degrees for RTL
-                      child: SvgPicture.asset(
-                        'assets/media/icons/back.svg',
-                        width: 24,
-                        height: 24,
-                        color: Colors.white,
+                    child: SvgPicture.asset(
+                      'assets/media/icons/arrow_back.svg',
+                      width: 24,
+                      height: 24,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
                       ),
                     ),
                   ),

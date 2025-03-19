@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import '../models/job_post.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class JobDetailHeader extends StatelessWidget {
   final JobPost job;
   final bool hasApplied;
   final VoidCallback onApply;
+  final VoidCallback? onCancelApplication;
 
   const JobDetailHeader({
     super.key,
     required this.job,
     required this.hasApplied,
     required this.onApply,
+    this.onCancelApplication,
   });
 
   @override
@@ -66,12 +69,12 @@ class JobDetailHeader extends StatelessWidget {
             children: [
               _buildStatChip(
                 '${job.applicantsCount} متقدم للوظيفة',
-                'assets/icons/applicants.svg',
+                'assets/media/icons/users.svg',
               ),
               const SizedBox(width: 8),
               _buildStatChip(
                 'منذ 20 ساعة',
-                'assets/icons/time.svg',
+                'assets/media/icons/clock.svg',
               ),
             ],
           ),
@@ -79,50 +82,122 @@ class JobDetailHeader extends StatelessWidget {
           // Action Buttons
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () {/* Handle save */},
-                    style: TextButton.styleFrom(
-                      backgroundColor: const Color(0xFFF8F8F9),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
-                    child: const Text(
-                      'حفظ',
-                      style: TextStyle(
-                        color: Color(0xFF4CA6A8),
-                        fontSize: 14,
-                        fontFamily: 'Cairo',
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextButton(
-                    onPressed: hasApplied ? null : onApply,
-                    style: TextButton.styleFrom(
-                      backgroundColor: const Color(0xFF4CA6A8),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
-                    child: Text(
-                      hasApplied ? 'تم التقديم' : 'قدم',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontFamily: 'Cairo',
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            child: hasApplied && onCancelApplication != null
+                ? _buildActionButtonsWithCancel(context)
+                : _buildActionButtons(context),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextButton(
+            onPressed: () {/* Handle save */},
+            style: TextButton.styleFrom(
+              backgroundColor: const Color(0xFFF8F8F9),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+            ),
+            child: const Text(
+              'حفظ',
+              style: TextStyle(
+                color: Color(0xFF4CA6A8),
+                fontSize: 14,
+                fontFamily: 'Cairo',
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: TextButton(
+            onPressed: hasApplied ? null : onApply,
+            style: TextButton.styleFrom(
+              backgroundColor: const Color(0xFF4CA6A8),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+            ),
+            child: Text(
+              hasApplied ? 'تم التقديم' : 'قدم',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontFamily: 'Cairo',
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildActionButtonsWithCancel(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextButton(
+                onPressed: () {/* Handle save */},
+                style: TextButton.styleFrom(
+                  backgroundColor: const Color(0xFFF8F8F9),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+                child: const Text(
+                  'حفظ',
+                  style: TextStyle(
+                    color: Color(0xFF4CA6A8),
+                    fontSize: 14,
+                    fontFamily: 'Cairo',
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextButton(
+                onPressed: null,
+                style: TextButton.styleFrom(
+                  backgroundColor: const Color(0xFF4CA6A8),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+                child: const Text(
+                  'تم التقديم',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontFamily: 'Cairo',
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: onCancelApplication,
+          style: TextButton.styleFrom(
+            backgroundColor: const Color(0xFFFFF0F0),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            minimumSize: const Size(double.infinity, 36),
+          ),
+          child: const Text(
+            'إلغاء التقديم',
+            style: TextStyle(
+              color: Color(0xFFE53935),
+              fontSize: 14,
+              fontFamily: 'Cairo',
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -151,7 +226,15 @@ class JobDetailHeader extends StatelessWidget {
           SizedBox(
             width: 10,
             height: 10,
-            child: Image.asset(iconPath),
+            child: SvgPicture.asset(
+              iconPath,
+              width: 10,
+              height: 10,
+              colorFilter: const ColorFilter.mode(
+                Color(0xFF6A6A6A),
+                BlendMode.srcIn,
+              ),
+            ),
           ),
         ],
       ),

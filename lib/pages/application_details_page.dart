@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/application.dart';
+import '../components/navigation/app_bars/custom_app_bar.dart';
 
 class ApplicationDetailsPage extends StatelessWidget {
   final Application application;
@@ -12,12 +13,11 @@ class ApplicationDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFB),
-      appBar: AppBar(
-        title: const Text('تفاصيل الطلب'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      appBar: CustomAppBar(
+        title: 'تفاصيل الطلب',
+        showBackButton: true,
       ),
+      backgroundColor: const Color(0xFFFBFBFB),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

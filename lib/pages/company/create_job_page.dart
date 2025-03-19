@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/city_service.dart';
 import '../../services/skills_service.dart';
-import '../../widgets/custom_app_bar.dart';
+import '../../components/navigation/app_bars/custom_app_bar.dart';
 
 class CreateJobPage extends StatefulWidget {
   const CreateJobPage({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../widgets/custom_app_bar.dart';
-import 'admin_navbar.dart';
+import '../../components/navigation/app_bars/custom_app_bar.dart';
+import '../../components/navigation/nav_bars/admin_nav_bar.dart';
 import '../../services/admin_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -38,68 +38,184 @@ class _AdminChatPageState extends State<AdminChatPage> {
           }
 
           final chats = snapshot.data?.docs ?? [];
+          
+          if (chats.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.chat_bubble_outline,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'لا توجد محادثات',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                      fontFamily: 'Cairo',
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
 
-          return ListView.builder(
+          return Padding(
             padding: const EdgeInsets.all(16),
-            itemCount: chats.length,
-            itemBuilder: (context, index) {
-              final chat = chats[index].data() as Map<String, dynamic>;
-              
-              return Card(
-                child: ListTile(
-                  leading: const CircleAvatar(
-                    backgroundColor: Color(0xFF4CA6A8),
-                    child: Icon(Icons.person, color: Colors.white),
-                  ),
-                  title: Text(chat['userName'] ?? 'مستخدم'),
-                  subtitle: Text(
-                    chat['lastMessage'] ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: chat['unreadAdmin'] == true
-                      ? Container(
-                          width: 12,
-                          height: 12,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF4CA6A8),
-                            shape: BoxShape.circle,
+            child: Container(
+              width: 319,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: chats.length,
+                      separatorBuilder: (context, index) => const SizedBox(height: 16),
+                      itemBuilder: (context, index) {
+                        final chat = chats[index].data() as Map<String, dynamic>;
+                        final hasUnread = chat['unreadAdmin'] == true;
+                        
+                        return Container(
+                          width: double.infinity,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/admin/support-chat',
+                                arguments: {
+                                  'chatId': chat['id'],
+                                  'userId': chat['userId'],
+                                },
+                              );
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // User info section (left side)
+                                Container(
+                                  width: 172,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      // Avatar
+                                      Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: ShapeDecoration(
+                                          color: Colors.black.withOpacity(0.2),
+                                          shape: const OvalBorder(),
+                                        ),
+                                        child: const Icon(
+                                          Icons.person,
+                                          color: Color(0xFF4CA6A8),
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      // Name and message
+                                      Container(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              chat['userName'] ?? 'أسم المتقدم',
+                                              style: const TextStyle(
+                                                color: Color(0xFF1A1D1E),
+                                                fontSize: 14,
+                                                fontFamily: 'Cairo',
+                                                fontWeight: FontWeight.w400,
+                                                height: 1.71,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              chat['lastMessage'] ?? 'مرحبا بك',
+                                              style: const TextStyle(
+                                                color: Color(0xFF6A6A6A),
+                                                fontSize: 12,
+                                                fontFamily: 'Cairo',
+                                                fontWeight: FontWeight.w500,
+                                                height: 1.67,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                
+                                // Notification circle
+                                Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: const ShapeDecoration(
+                                    color: Color(0xFF4CA6A8),
+                                    shape: OvalBorder(),
+                                  ),
+                                ),
+                                
+                                // Notification count
+                                SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: Center(
+                                    child: Text(
+                                      '2',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontFamily: 'Cairo',
+                                        fontWeight: FontWeight.w500,
+                                        height: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        )
-                      : null,
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/admin/support-chat',
-                      arguments: {
-                        'chatId': chat['id'],
-                        'userId': chat['userId'],
+                        );
                       },
-                    );
-                  },
-                ),
-              );
-            },
+                    ),
+                  ),
+                ],
+              ),
+            ),
           );
         },
       ),
-      bottomNavigationBar: AdminNavbar(
-        currentIndex: 3, // Support/chat tab
+      bottomNavigationBar: AdminNavBar(
+        currentIndex: 2, // Updated index for chat tab (was 3)
         onTap: (index) {
           switch (index) {
-            case 0:
+            case 4:
               Navigator.pushReplacementNamed(context, '/admin/dashboard');
+              break;
+            case 3:
+              Navigator.pushReplacementNamed(context, '/admin/applications');
+              break;
+            case 2:
+              // Already on chat/support page
               break;
             case 1:
               Navigator.pushReplacementNamed(context, '/admin/users');
               break;
-            case 2:
-              Navigator.pushReplacementNamed(context, '/admin/applications');
-              break;
-            case 3:
-              // Already on chat/support page
-              break;
-            case 4:
+            case 0:
               Navigator.pushReplacementNamed(context, '/admin/settings');
               break;
           }

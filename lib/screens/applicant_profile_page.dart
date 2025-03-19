@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../widgets/custom_app_bar.dart';
+import '../components/navigation/app_bars/custom_app_bar.dart';
 import '../widgets/profile/profile_card.dart';
 import '../widgets/profile/about_me_card.dart';
 import '../widgets/profile/experience_card.dart';

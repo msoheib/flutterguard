@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../widgets/custom_app_bar.dart';
+import '../components/navigation/app_bars/custom_app_bar.dart';
 
 class ApplicantReviewPage extends StatelessWidget {
   const ApplicantReviewPage({super.key});

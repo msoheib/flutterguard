@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../widgets/company_route_wrapper.dart';
-import '../../widgets/custom_app_bar.dart';
+import '../../components/navigation/app_bars/custom_app_bar.dart';
 import './company_applicants_page.dart';
 
 class CompanyApplicationsPage extends StatelessWidget {
@@ -13,7 +13,7 @@ class CompanyApplicationsPage extends StatelessWidget {
     final userId = FirebaseAuth.instance.currentUser?.uid;
 
     return CompanyRouteWrapper(
-      currentIndex: 2,
+      currentIndex: 1,
       child: Scaffold(
         backgroundColor: const Color(0xFFFBFBFB),
         body: Column(

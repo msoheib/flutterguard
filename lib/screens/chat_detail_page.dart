@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/chat.dart';
 import '../models/message.dart';
 import '../services/chat_service.dart';
-import '../widgets/custom_app_bar.dart';
+import '../components/navigation/app_bars/custom_app_bar.dart';
 
 class ChatDetailPage extends StatefulWidget {
   final Chat chat;

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../models/job_post.dart';
+import '../services/job_service.dart';
 
-class JobListingCard extends StatelessWidget {
+class JobListingCard extends StatefulWidget {
   final JobPost? job;
+  final String? jobId;
   final String? title;
   final String? company;
   final Map<String, dynamic>? location;
@@ -14,10 +17,12 @@ class JobListingCard extends StatelessWidget {
   final VoidCallback onTap;
   final String? buttonText;
   final Color? buttonColor;
+  final VoidCallback? onCancelPressed;
 
   const JobListingCard({
     super.key,
     this.job,
+    this.jobId,
     this.title,
     this.company,
     this.location,
@@ -28,21 +33,119 @@ class JobListingCard extends StatelessWidget {
     required this.onTap,
     this.buttonText,
     this.buttonColor,
+    this.onCancelPressed,
   });
 
   @override
+  State<JobListingCard> createState() => _JobListingCardState();
+}
+
+class _JobListingCardState extends State<JobListingCard> {
+  final JobService _jobService = JobService();
+  bool _isFavorited = false;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Use post-frame callback to ensure context is available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkFavoriteStatus();
+    });
+  }
+
+  void _checkFavoriteStatus() {
+    String? jobId;
+    
+    if (widget.job != null) {
+      jobId = widget.job!.id;
+    } else {
+      // Try to get the jobId from the JobListingCard parameters
+      jobId = widget.jobId;
+    }
+    
+    if (jobId == null || jobId.isEmpty) return;
+    
+    _jobService.isJobFavorited(jobId).listen((isFavorited) {
+      if (mounted) {
+        setState(() {
+          _isFavorited = isFavorited;
+        });
+      }
+    });
+  }
+
+  Future<void> _toggleFavorite() async {
+    String? jobId;
+    
+    if (widget.job != null) {
+      jobId = widget.job!.id;
+    } else {
+      // Try to get the jobId from the JobListingCard parameters
+      // This is likely an application card from applications_history_page.dart
+      jobId = widget.jobId;
+    }
+    
+    if (jobId == null || jobId.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('لا يمكن حفظ هذه الوظيفة')),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Get current status before toggling
+      final wasBookmarked = _isFavorited;
+      
+      // Toggle favorite status
+      await _jobService.toggleFavoriteJob(jobId);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(wasBookmarked 
+              ? 'تم إزالة الوظيفة من المحفوظات' 
+              : 'تم حفظ الوظيفة بنجاح'),
+            backgroundColor: const Color(0xFF4CA6A8),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      // Show error if something goes wrong
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final displayTitle = job?.title ?? title ?? '';
-    final displayCompany = job?.company ?? company ?? '';
-    final displayLocation = job?.location ?? location ?? {};
-    final displaySalary = job?.salary ?? salary ?? {};
-    final displayJobType = job?.type ?? jobType ?? '';
-    final displayWorkType = job?.workType ?? workType ?? '';
-    final displayButtonText = buttonText ?? 'عرض التفاصيل';
-    final displayButtonColor = buttonColor ?? Theme.of(context).primaryColor;
+    final displayTitle = widget.job?.title ?? widget.title ?? '';
+    final displayCompany = widget.job?.company ?? widget.company ?? '';
+    final displayLocation = widget.job?.location ?? widget.location ?? {};
+    final displaySalary = widget.job?.salary ?? widget.salary ?? {};
+    final displayJobType = widget.job?.type ?? widget.jobType ?? '';
+    final displayWorkType = widget.job?.workType ?? widget.workType ?? '';
+    final displayButtonText = widget.buttonText ?? 'عرض التفاصيل';
+    final displayButtonColor = widget.buttonColor ?? Theme.of(context).primaryColor;
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Container(
         width: 319,
         height: 200,
@@ -77,10 +180,56 @@ class JobListingCard extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SvgPicture.asset(
-                            'assets/media/icons/bookmark.svg',
-                            width: 24,
-                            height: 24,
+                          Row(
+                            children: [
+                              if (widget.onCancelPressed != null)
+                                GestureDetector(
+                                  onTap: widget.onCancelPressed,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    margin: const EdgeInsets.only(right: 8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFEEEE),
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 2,
+                                          offset: const Offset(0, 1),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Color(0xFFE53935),
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                              GestureDetector(
+                                onTap: _isLoading ? null : _toggleFavorite,
+                                child: _isLoading 
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4CA6A8)),
+                                      ),
+                                    )
+                                  : widget.job != null || widget.jobId != null
+                                    ? SvgPicture.asset(
+                                        'assets/media/icons/bookmark.svg',
+                                        width: 24,
+                                        height: 24,
+                                        colorFilter: ColorFilter.mode(
+                                          _isFavorited ? const Color(0xFF4CA6A8) : const Color(0xFF6A6A6A),
+                                          BlendMode.srcIn,
+                                        ),
+                                      )
+                                    : const SizedBox(width: 24, height: 24),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 25),
                           Row(

@@ -5,10 +5,12 @@ import '../services/job_service.dart';
 import '../models/job_post.dart';
 import '../screens/filter_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../pages/profile_cv_screen.dart';
 import '../services/service_locator.dart';
 import '../widgets/user_route_wrapper.dart';
 import '../screens/job_detail_page.dart';
+import 'cv_profile_page.dart';
 
 class JobSeekerHomePage extends StatefulWidget {
   const JobSeekerHomePage({super.key});
@@ -53,7 +55,7 @@ class _JobSeekerHomePageState extends State<JobSeekerHomePage> {
             children: [
               // Header
               Container(
-                height: 125,
+                height: 145,
                 decoration: const BoxDecoration(
                   color: Color(0xFFF5F5F5),
                   borderRadius: BorderRadius.only(
@@ -63,7 +65,7 @@ class _JobSeekerHomePageState extends State<JobSeekerHomePage> {
                 ),
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.only(top: 12, left: 24, right: 24),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -72,7 +74,7 @@ class _JobSeekerHomePageState extends State<JobSeekerHomePage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const ProfileCvScreen(),
+                                builder: (context) => const CVProfilePage(),
                               ),
                             );
                           },
@@ -98,7 +100,9 @@ class _JobSeekerHomePageState extends State<JobSeekerHomePage> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: _showFilterBottomSheet,
+                          onTap: () {
+                            Navigator.pushNamed(context, '/notifications');
+                          },
                           child: Container(
                             width: 44,
                             height: 44,
@@ -107,11 +111,40 @@ class _JobSeekerHomePageState extends State<JobSeekerHomePage> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Center(
-                              child: SvgPicture.asset(
-                                'assets/media/icons/filter.svg',
-                                width: 24,
-                                height: 24,
-                                color: Colors.white,
+                              child: Stack(
+                                alignment: Alignment.topRight,
+                                children: [
+                                  const Icon(
+                                    Icons.notifications_outlined,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                  StreamBuilder<QuerySnapshot>(
+                                    stream: FirebaseFirestore.instance
+                                        .collection('notifications')
+                                        .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+                                        .where('isRead', isEqualTo: false)
+                                        .snapshots(),
+                                    builder: (context, snapshot) {
+                                      final unreadCount = snapshot.data?.docs.length ?? 0;
+                                      if (unreadCount > 0) {
+                                        return Positioned(
+                                          right: 0,
+                                          top: 0,
+                                          child: Container(
+                                            width: 12,
+                                            height: 12,
+                                            decoration: BoxDecoration(
+                                              color: Colors.red,
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return const SizedBox.shrink();
+                                    },
+                                  ),
+                                ],
                               ),
                             ),
                           ),

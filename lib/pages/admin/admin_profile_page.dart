@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../widgets/custom_app_bar.dart';
-import 'admin_navbar.dart';
+import '../../components/navigation/app_bars/custom_app_bar.dart';
+import '../../components/navigation/nav_bars/admin_nav_bar.dart';
 import '../../services/admin_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -117,7 +117,7 @@ class _AdminProfilePageState extends State<AdminProfilePage> {
           );
         },
       ),
-      bottomNavigationBar: AdminNavbar(
+      bottomNavigationBar: AdminNavBar(
         currentIndex: 4, // Profile/settings tab
         onTap: (index) {
           switch (index) {
